@@ -46,7 +46,7 @@ function LandingPage() {
 
       {/* Hero Section */}
       <section className="container relative mx-auto max-w-6xl px-6 py-20 md:py-24 lg:py-32 lg:pb-36">
-        <Badge className="mb-8 px-3.5 py-1.5" variant="outline">CROSSROAD v0.2.1</Badge>
+        <Badge className="mb-8 px-3.5 py-1.5" variant="outline">CROSSROAD v0.2.3</Badge>
         
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           <motion.div

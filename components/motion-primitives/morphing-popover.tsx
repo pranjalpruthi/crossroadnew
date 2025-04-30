@@ -12,9 +12,7 @@ import {
 import {
   AnimatePresence,
   MotionConfig,
-  motion,
-  Transition,
-  Variants,
+  motion, type Variants, type Transition
 } from 'motion/react';
 import useClickOutside from '@/hooks/useClickOutside';
 import { cn } from '@/lib/utils';
@@ -179,7 +177,7 @@ function MorphingPopoverContent({
     );
 
   const ref = useRef<HTMLDivElement>(null);
-  useClickOutside(ref, context.close);
+  useClickOutside(ref as React.RefObject<HTMLElement>, context.close);
 
   useEffect(() => {
     if (!context.isOpen) return;

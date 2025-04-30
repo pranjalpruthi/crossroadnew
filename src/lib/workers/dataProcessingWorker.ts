@@ -5,7 +5,7 @@
  * - Filtering/aggregating large datasets
  */
 
-import { tableFromIPC, Table } from 'apache-arrow';
+import { tableFromIPC } from 'apache-arrow';
 
 // Define message types for type safety
 type WorkerMessage = {

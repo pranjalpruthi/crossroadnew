@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, BarChartBig, Loader2, Maximize2 } from 'lucide-react'; // Added Maximize2
+import { AlertCircle, Info, BarChartBig, Maximize2 } from 'lucide-react'; // Added Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
@@ -41,11 +41,7 @@ type QueryFnData = {
     error?: string;
 };
 
-// Define the structure for aggregated data used in the chart
-interface AggregatedIntersectData {
-    gene: string;
-    counts: Record<string, number>; // { 'IN': count, 'intersect_start': count, ... }
-}
+
 
 // Define the structure for the calculated statistics processed internally
 interface ProcessedPlotStats {

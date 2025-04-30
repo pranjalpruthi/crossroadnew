@@ -2,11 +2,10 @@ import React, { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, PieChart, Loader2, Share2 } from 'lucide-react'; // Using Share2 icon for SSR conservation
+import { AlertCircle, Info, Share2 } from 'lucide-react'; // Using Share2 icon for SSR conservation
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
-import * as echarts from 'echarts/core';
 // Import Popover components
 import {
   Popover,

@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Github, Twitter, Linkedin, Globe, BookOpen, GraduationCap, Mail } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";

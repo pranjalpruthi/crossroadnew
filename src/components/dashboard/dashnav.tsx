@@ -6,8 +6,6 @@ import {
   Users,
   Settings,
   BarChart,
-  Sun,
-  Moon,
   ChevronsUpDown,
   Check,
   Building2,
@@ -16,12 +14,7 @@ import {
   BadgeCheck,
   CreditCard,
   Bell,
-  Monitor,
-  Palette,
-  Wand2
 } from "lucide-react"
-import { useTheme } from "@/components/theme-provider"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,11 +29,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import {
   Command,
   CommandEmpty,
@@ -67,14 +55,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { useNavigate } from "@tanstack/react-router"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
@@ -311,7 +291,16 @@ const UserSwitcher = () => {
   )
 }
 
-const NavigationLink = ({ link, isCollapsed }) => {
+interface NavigationLinkProps {
+  link: {
+    to: string;
+    label: string;
+    icon: React.ReactElement<{ className?: string }>;  // Updated type definition
+  };
+  isCollapsed: boolean;
+}
+
+const NavigationLink = ({ link, isCollapsed }: NavigationLinkProps) => {
   return (
     <HoverCard openDelay={200}>
       <HoverCardTrigger asChild>
@@ -332,7 +321,8 @@ const NavigationLink = ({ link, isCollapsed }) => {
           {React.cloneElement(link.icon, {
             className: cn(
               "transition-all",
-              isCollapsed ? "h-5 w-5" : "h-4 w-4"
+              isCollapsed ? "h-5 w-5" : "h-4 w-4",
+              link.icon.props?.className || ""
             )
           })}
           {!isCollapsed && (

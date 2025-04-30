@@ -67,12 +67,12 @@ export const Route = createFileRoute('/dashboard/')({
 })
 
 function DashboardPage() {
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: api.getDashboardStats
   })
 
-  const { data: chartData, isLoading: chartsLoading } = useQuery({
+  const { data: chartData } = useQuery({
     queryKey: ['dashboard-charts'],
     queryFn: api.getChartData
   })
@@ -230,7 +230,7 @@ function DashboardPage() {
                   {chartData?.pieData.map((_, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={colors[`chart${index + 1}`]}
+                      fill={colors[`chart${index + 1}` as keyof typeof colors]}
                       style={{ filter: 'brightness(1.1)' }}
                     />
                   ))}

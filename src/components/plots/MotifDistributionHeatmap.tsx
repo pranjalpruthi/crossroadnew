@@ -1,10 +1,10 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Maximize2, AlertCircle, Check, ChevronsUpDown, Filter } from 'lucide-react';
+import { Info, Maximize2, AlertCircle, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as echarts from 'echarts/core';
 import { HeatmapChart } from 'echarts/charts';
@@ -290,7 +290,7 @@ const MotifDistributionHeatmap: React.FC<MotifDistributionHeatmapProps> = ({ que
    }
 
   // Destructure processed data
-  const { genomes, motifs, data, maxCount, stats, allUniqueGenomes, allUniqueMotifs, noFilteredData } = processed;
+  const { genomes, motifs, data, maxCount, stats, noFilteredData } = processed;
 
   // ECharts options - uses *filtered* genomes/motifs
   const options: EChartsCoreOption = {

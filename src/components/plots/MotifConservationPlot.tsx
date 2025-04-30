@@ -2,11 +2,10 @@ import React, { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, PieChart, Loader2 } from 'lucide-react'; // Using PieChart icon
+import { AlertCircle, Info, PieChart } from 'lucide-react'; // Using PieChart icon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
-import * as echarts from 'echarts/core';
 // Import Popover components
 import {
   Popover,

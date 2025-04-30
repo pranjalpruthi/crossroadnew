@@ -13,9 +13,8 @@ import {
   motion,
   AnimatePresence,
   MotionConfig,
-  Transition,
-  Variant,
 } from 'motion/react';
+import type { Transition, Variant } from 'motion/react'; // Import types separately
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react';

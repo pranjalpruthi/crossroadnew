@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react'; // Added useEffect
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query'; // Import UseQueryResult
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Removed CardDescription, CardFooter
-import { AlertCircle, BarChartHorizontalBig, Info, Loader2, Maximize2 } from 'lucide-react'; // Added Maximize2 icon
+import { AlertCircle, BarChartHorizontalBig, Info, Maximize2 } from 'lucide-react'; // Added Maximize2 icon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
 import { Separator } from '@/components/ui/separator';

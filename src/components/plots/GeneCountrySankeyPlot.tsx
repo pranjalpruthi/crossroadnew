@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, GitBranch, Loader2, Network, Maximize2 } from 'lucide-react'; // Added Network, Maximize2
+import { AlertCircle, Info, Network, Maximize2 } from 'lucide-react'; // Added Network, Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
@@ -226,7 +226,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
 
   // Assign colors to nodes (Genes get HSL, Countries get default palette)
   const numGenes = stats.total_genes;
-  const nodeColors = chartData.nodes.map((node, index) => {
+  const nodeColors = chartData.nodes.map((_node, index) => {
       if (index < numGenes) {
           // Gene node
           return getHslColor(index, numGenes); // Use helper

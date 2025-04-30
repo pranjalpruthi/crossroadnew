@@ -2,14 +2,12 @@ import React, { useMemo, useEffect } from 'react'; // Added useEffect
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query'; // Import UseQueryResult
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, GitBranch, Loader2, Maximize2 } from 'lucide-react'; // Added Maximize2
+import { AlertCircle, Info, GitBranch, Maximize2 } from 'lucide-react'; // Added Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button'; // Added Button
-import * as echarts from 'echarts/core';
-// Import Popover components
 import {
   Popover,
   PopoverContent,
@@ -225,7 +223,7 @@ const CategoryCountrySankeyPlot: React.FC<CategoryCountrySankeyPlotProps> = ({ q
 
   // Assign colors to nodes (Categories get HSL, Countries get default palette)
   const numCategories = stats.total_categories;
-  const nodeColors = chartData.nodes.map((node, index) => {
+  const nodeColors = chartData.nodes.map((_node, index) => {
       if (index < numCategories) {
           // Category node
           return getHslColor(index, numCategories);

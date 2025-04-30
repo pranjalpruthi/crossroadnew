@@ -69,7 +69,7 @@ export interface DataProcessingResult<T = any> {
  * Custom hook for offloading data processing to web workers
  */
 export function useDataProcessing<T = any>(options: UseDataProcessingOptions = {}): DataProcessingResult<T> {
-  const { parseOnDataChange = true, enablePerfLogging = true } = options;
+  const { enablePerfLogging = true } = options;
   
   const [data, setData] = useState<T[] | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);

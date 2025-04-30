@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueries, type UseQueryResult } from '@tanstack/react-query'; // Added useQueries, UseQueryResult
 import { useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
-import { tableFromIPC, Table } from "apache-arrow"; // Added Table type
+import { tableFromIPC } from "apache-arrow"; // Added Table type
 import {
   useReactTable,
   getCoreRowModel,
@@ -58,8 +58,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 // --- Icons and Animation ---
 import {
-  Upload, Loader2, AlertCircle, Download, TableIcon, FileCheck, DatabaseZap, Info, Maximize, X, Search,
-  LineChart, AreaChart, GitBranch, Droplet, BarChart, BarChartHorizontalBig, Dot,
+   Loader2, AlertCircle, Download, TableIcon, DatabaseZap, Info, Search,
+   AreaChart, GitBranch,
   ChevronUpIcon, ChevronDownIcon,
   ChevronFirstIcon,
   ChevronLastIcon,
@@ -68,8 +68,6 @@ import {
   Filter,
   ChevronDown,
   File, // Added File icon
-  FileText, // Added FileText icon
-  FileCode, // Added FileCode icon
   BookOpen, // Added BookOpen icon
   History, // Added History icon
   Settings2, // Added Settings2 icon
@@ -136,7 +134,6 @@ export function TextShine() {
 
 // --- Zod Schema Definitions ---
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
-const ACCEPTED_FASTA_TYPES = ["application/x-fasta", "text/plain", ""];
 const ACCEPTED_TSV_EXTENSIONS = ['.tsv'];
 const ACCEPTED_BED_EXTENSIONS = ['.bed'];
 
@@ -526,7 +523,6 @@ function HomePage() {
   const [jobMessage, setJobMessage] = useState<string | null>(null);
   const [jobProgress, setJobProgress] = useState<number | null>(null);
   const [jobError, setJobError] = useState<string | null>(null);
-  const [isPlotFullscreen, setIsPlotFullscreen] = useState(false); // State for fullscreen plots
   const [submittedReferenceId, setSubmittedReferenceId] = useState<string | null>(null); // State for submitted ref ID
   const [previousJobIdInput, setPreviousJobIdInput] = useState<string>(''); // State for previous job ID input
   const queryClient = useQueryClient(); // Get query client instance
@@ -606,7 +602,7 @@ function HomePage() {
        setJobId(null); setJobUrls(null); setJobStatus(null); setJobMessage(null);
        setJobProgress(null); setJobError(null); setSubmittedReferenceId(null); // Clear submitted ref ID on new submission
      },
-     onSuccess: (data, variables) => { // Access submitted variables here
+     onSuccess: (data) => { // Remove unused variables parameter
        // Explicitly use only the 'data' parameter from onSuccess for job details
       const newJobId = data.job_id;
       const initialStatus = data.status;
@@ -843,10 +839,7 @@ function HomePage() {
      }, {} as Record<PlotKey, { data: any[]; columns: ColumnDef<any>[] }>);
    }, [queryResultsMap]); // Recompute when query results change
 
-   // Filter out 'gene_country_sankey' from the keys used for rendering table tabs
-   // Renamed back to availableTableKeys for consistency, but keeping the filter
-   const availableTableKeys = (Object.keys(availableTableData) as PlotKey[])
-       .filter(key => key !== 'gene_country_sankey');
+
 
    // Determine if any plot data is available or loading
    const plotSourceResult = queryResultsMap['plot_source'];

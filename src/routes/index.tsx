@@ -4,8 +4,6 @@ import { ArrowRight, Dna, BookOpen, GitCompare, Database, BarChart3, Github, Mic
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useEffect, useState } from 'react';
 
 // Define the route for the landing page
 export const Route = createFileRoute('/')({
@@ -39,17 +37,6 @@ function FeatureCard({
 
 // Main Landing Page Component
 function LandingPage() {
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
     <div className="relative min-h-screen">
       {/* Background gradient */}
@@ -97,7 +84,7 @@ function LandingPage() {
                   Start Analysis <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               </Link>
-              <Link to="/docs">
+              <Link to="/about">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   <BookOpen className="mr-2 h-5 w-5" /> Read Documentation
               </Button>
@@ -113,7 +100,7 @@ function LandingPage() {
           >
             <div className="w-full h-[400px] rounded-lg bg-muted/30 border backdrop-blur-sm relative overflow-hidden">
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <Dna className="h-32 w-32 text-primary/40" strokeWidth={0.5} />
+                <img src="/logo512.png" alt="Crossroad Logo" className="h-32 w-32 object-contain" />
                 <p className="text-xl font-medium text-foreground/70 mt-4">SSR Analysis Pipeline</p>
               </div>
               
@@ -321,12 +308,12 @@ function LandingPage() {
             <div className="flex gap-8">
               <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
               <Link to="/analysis" className="text-muted-foreground hover:text-foreground">Analysis</Link>
-              <Link to="/docs" className="text-muted-foreground hover:text-foreground">Documentation</Link>
+              <Link to="/about" className="text-muted-foreground hover:text-foreground">Documentation</Link>
               <Link to="/about" className="text-muted-foreground hover:text-foreground">About</Link>
             </div>
             
             <div className="text-sm text-muted-foreground">
-              © 2025 CSIR-IGIB. All rights reserved.
+              2025 CSIR-IGIB. All rights reserved.
             </div>
           </div>
         </div>

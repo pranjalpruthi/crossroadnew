@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, Flame, Loader2, Maximize2 } from 'lucide-react'; // Added Maximize2
+import { AlertCircle, Info, Flame, Maximize2 } from 'lucide-react'; // Added Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
@@ -42,13 +42,6 @@ type QueryFnData = {
     error?: string;
 };
 
-// Define the structure for data points used in the chart
-interface PlotPointData {
-    occurrenceIndex: number; // Y-axis value
-    motif: string;          // For Y-axis label and tooltip
-    gene: string;           // For coloring and tooltip
-    repeatCount: number;    // X-axis value
-}
 
 // Define the structure for the calculated statistics processed internally
 interface ProcessedPlotStats {

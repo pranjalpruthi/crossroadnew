@@ -157,9 +157,9 @@ function NavActions() {
           <BookOpen className="h-4 w-4" />
         </Button>
         
-        <Link to="/docs" aria-label="Documentation">
-          <Button 
-            variant="ghost" 
+        <Link to="." aria-label="Documentation">
+          <Button
+            variant="ghost"
             size="icon"
             className="h-8 w-8 p-0 hover:bg-background/80"
           >
@@ -191,8 +191,6 @@ export default function Navbar() {
   const ShinyRotatingBorderButton = ({ children, className }: { children: React.ReactNode, className?: string }) => (
       <Button variant="outline" className={clsx("!p-1 sm:!p-1.5 !px-2 sm:!px-3", className)}>{children}</Button>
   );
-  const ShareDrawer = () => <Button variant="ghost" size="icon" className="h-8 w-8"><HomeIcon className="h-4 w-4"/></Button>;
-
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop
@@ -294,4 +292,4 @@ export default function Navbar() {
       </motion.header>
     </motion.div>
   )
-} 
+}

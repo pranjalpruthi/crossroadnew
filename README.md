@@ -1,6 +1,6 @@
-# CROSSROAD
+# CROSSROAD Web Platform
 
-Crossroad is a web-based platform for analyzing Simple Sequence Repeat (SSR) patterns across multiple genomes. It provides interactive visualizations and summary statistics to help researchers explore SSR distributions, motif conservation, mutational hotspots, and more.
+Crossroad  is a web-based platform for analyzing Simple Sequence Repeat (SSR) patterns across multiple genomes. It provides interactive visualizations and summary statistics to help researchers explore SSR distributions, motif conservation, mutational hotspots, and more.
 
 ## Features
 - Interactive SSR plots:

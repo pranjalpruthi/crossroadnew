@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun vite --port 3000",
-    "start": "bunx --bun vite --port 3000",
-    "build": "bunx --bun vite build && bunx --bun tsc",
-    "serve": "bunx --bun vite preview",
-    "test": "bunx --bun vitest run"
+    "dev": "pnpm exec vite --port 3000",
+    "start": "pnpm exec vite --port 3000",
+    "build": "pnpm vite build && pnpm tsc",
+    "serve": "pnpm exec vite preview",
+    "test": "pnpm exec vitest run"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.4",
@@ -63,6 +63,7 @@
     "tailwindcss": "^4.0.6",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "vega": "^6.1.2",
     "vega-lite": "^6.1.0",
     "zod": "^3.24.2"
   },
@@ -77,5 +78,13 @@
     "vite": "^6.1.0",
     "vitest": "^3.0.5",
     "web-vitals": "^4.2.4"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ],
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

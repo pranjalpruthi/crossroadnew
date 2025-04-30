@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as DashboardIndexImport } from './routes/dashboard/index'
+import { Route as AnalysisIndexImport } from './routes/analysis/index'
 import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
 
@@ -35,6 +36,12 @@ const DashboardIndexRoute = DashboardIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+
+const AnalysisIndexRoute = AnalysisIndexImport.update({
+  id: '/analysis/',
+  path: '/analysis/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const AboutIndexRoute = AboutIndexImport.update({
@@ -81,6 +88,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutIndexImport
       parentRoute: typeof rootRoute
     }
+    '/analysis/': {
+      id: '/analysis/'
+      path: '/analysis'
+      fullPath: '/analysis'
+      preLoaderRoute: typeof AnalysisIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
@@ -110,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
+  '/analysis': typeof AnalysisIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 
@@ -117,6 +132,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
+  '/analysis': typeof AnalysisIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 
@@ -126,6 +142,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about/': typeof AboutIndexRoute
+  '/analysis/': typeof AnalysisIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 
@@ -136,15 +153,17 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/demo/tanstack-query'
     | '/about'
+    | '/analysis'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/tanstack-query' | '/about' | '/dashboard'
+  to: '/' | '/demo/tanstack-query' | '/about' | '/analysis' | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/demo/tanstack-query'
     | '/about/'
+    | '/analysis/'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -154,6 +173,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  AnalysisIndexRoute: typeof AnalysisIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   AboutIndexRoute: AboutIndexRoute,
+  AnalysisIndexRoute: AnalysisIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -176,7 +197,8 @@ export const routeTree = rootRoute
         "/",
         "/dashboard",
         "/demo/tanstack-query",
-        "/about/"
+        "/about/",
+        "/analysis/"
       ]
     },
     "/": {
@@ -193,6 +215,9 @@ export const routeTree = rootRoute
     },
     "/about/": {
       "filePath": "about/index.tsx"
+    },
+    "/analysis/": {
+      "filePath": "analysis/index.tsx"
     },
     "/dashboard/": {
       "filePath": "dashboard/index.tsx",

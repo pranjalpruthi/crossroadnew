@@ -100,7 +100,7 @@ import SsrGeneGenomeDotPlot from '@/components/plots/SsrGeneGenomeDotPlot'; // I
 import UpsetPlot from '@/components/plots/UpsetPlot'; // Import the UpSet plot component
 
 // --- Constants ---
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_CROSSROAD_API_URL || 'http://127.0.0.1:8000';
 const POLLING_INTERVAL = 3000;
 
 // Define keys to fetch - plot_source is used by multiple plots

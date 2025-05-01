@@ -884,7 +884,7 @@ function HomePage() {
         {/* --- Header --- */}
        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center mb-12">
          <h1 className="font-bold tracking-tighter text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
-           Crossroad <span className="block bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent font-semibold">SSR Analysis Pipeline</span>
+           croSSRroad <span className="block bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent font-semibold">SSR Analysis Pipeline</span>
          </h1>
          <p className="mx-auto max-w-[700px] text-muted-foreground text-sm md:text-base lg:text-lg mt-4">
            Analyze Simple Sequence Repeats (SSRs), compare across genomes, identify hotspots, and trace evolutionary patterns.

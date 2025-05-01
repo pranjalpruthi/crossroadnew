@@ -64,6 +64,30 @@ const team: TeamMember[] = [
       researchgate: "https://www.researchgate.net/profile/Jitendra-Narayan-3",
       twitter: "https://x.com/jnarayan81"
     }
+  },
+  {
+    name: "Nityendra Shukla",
+    role: "Research Scientist - I",
+    bio: "Department of Medical Mycology, Vallabhbhai Patel Chest Institute, University of Delhi",
+    avatar: "bg-gradient-to-br from-emerald-500 to-teal-500",
+    image: "https://pbs.twimg.com/profile_images/529856180328230912/8aJBzkq6_400x400.jpeg",
+    links: {
+      researchgate: "https://www.researchgate.net/profile/Nityendra-Shukla-2",
+      website: "https://jitendralab.igib.res.in/profile/nityendra21",
+      email: "nitinshukla218@gmail.com"
+    }
+  },
+  {
+    name: "Dr. Sahil Mahfooz",
+    role: "Department of Plant -Microbe Interaction",
+    bio: "Deen Dayal Upadhyaya Gorakhpur University",
+    avatar: "bg-gradient-to-br from-cyan-500 to-blue-500", // Assigning a default gradient
+    image: "https://pbs.twimg.com/profile_images/1680247721796714496/oVJm2aPq_400x400.jpg",
+    links: {
+      researchgate: "https://www.researchgate.net/profile/Sahil-Mahfooz",
+      twitter: "https://x.com/sahil_mhfooz",
+      scholar: "https://scholar.google.com/citations?user=SjMpvg8AAAAJ&hl=en"
+    }
   }
 ];
 
@@ -169,7 +193,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                   variants={staggerContainer}
                 >
                   {/* Team Members - Development Team First */}
-                  {[team[0], team[1]].map((member) => (
+                  {team.filter((_, index) => index !== 2).map((member) => (
                     <motion.div
                       key={member.name}
                       variants={fadeIn}

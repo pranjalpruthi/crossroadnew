@@ -265,7 +265,7 @@ export default function Navbar() {
                 "!p-1 sm:!p-1.5 !px-2 sm:!px-3",
                 isHomePage && !isScrolled ? "!border-0 !bg-transparent" : ""
               )}>
-                <span className="text-sm sm:text-base font-bold tracking-tight">CROSSROAD</span> 
+                <span className="text-sm sm:text-base font-bold tracking-tight">croSSRoad</span> 
               </ShinyRotatingBorderButton>
             </Link>
             <NavActions />

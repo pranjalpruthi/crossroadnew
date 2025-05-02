@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>© {new Date().getFullYear()}</span>
             <Link to="/" className="font-semibold text-foreground hover:text-primary transition-colors">
-              Crossroad
+              croSSRoad
             </Link>
             <span className="flex items-center gap-1">
               Built with <Heart className="h-4 w-4 text-red-500" /> for Researchers

@@ -1,12 +1,13 @@
 import { motion } from "framer-motion"
 import { ModeToggle } from '@/components/mode-toggle'
-import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Loader2 } from 'lucide-react'
+import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Loader2, Github } from 'lucide-react'
 import { Link, useRouterState, useNavigate } from '@tanstack/react-router'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { AboutDrawer } from "@/components/about-drawer"
+import { GuideDrawer } from "@/components/GuideDrawer"
 
 // --- Constants ---
 const CITATION = `Pruthi, P., Narayan, J., Agarwal, P., Shukla, N., & Bhatia, A. (2024). CHITRA: Chromosome Interactive Tool for Rearrangement Analysis. CSIR-IGIB.`
@@ -125,39 +126,53 @@ function NavActions() {
             <span className="ml-2">About</span>
           </Button>
         </AboutDrawer>
-        <Button 
-          variant="ghost" 
-          className="h-8 w-auto hover:bg-background/80 text-sm p-2"
-        >
-          <BookOpen className="h-4 w-4" />
-          <span className="ml-2">Guide</span>
-        </Button>
-        <NavButton to="/docs" icon={FileText}>
+        <GuideDrawer>
+          <Button variant="ghost" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+            <BookOpen className="h-4 w-4" />
+            <span className="ml-2">Guide</span>
+          </Button>
+        </GuideDrawer>
+        <NavButton to="/about" icon={FileText}>
           Docs
         </NavButton>
         <CopyButton />
+        <a 
+          href="https://github.com/BioinformaticsOnLine/croSSRoad" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex"
+        >
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+            <Github className="h-4 w-4" />
+            <span className="ml-2">GitHub</span>
+          </Button>
+        </a>
       </div>
 
       <div className="flex sm:hidden items-center gap-0.5">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="h-8 w-8 p-0 hover:bg-background/80"
-          aria-label="About"
-        >
-          <Info className="h-4 w-4" />
-        </Button>
+        <AboutDrawer>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 p-0 hover:bg-background/80"
+            aria-label="About"
+          >
+            <Info className="h-4 w-4" />
+          </Button>
+        </AboutDrawer>
         
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="h-8 w-8 p-0 hover:bg-background/80"
-          aria-label="Guide"
-        >
-          <BookOpen className="h-4 w-4" />
-        </Button>
+        <GuideDrawer>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 p-0 hover:bg-background/80"
+            aria-label="Guide"
+          >
+            <BookOpen className="h-4 w-4" />
+          </Button>
+        </GuideDrawer>
         
-        <Link to="." aria-label="Documentation">
+        <Link to="/about" aria-label="Documentation">
           <Button
             variant="ghost"
             size="icon"
@@ -176,6 +191,21 @@ function NavActions() {
         >
           <Copy className="h-4 w-4" />
         </Button>
+
+        <a 
+          href="https://github.com/BioinformaticsOnLine/croSSRoad" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 p-0 hover:bg-background/80"
+            aria-label="GitHub"
+          >
+            <Github className="h-4 w-4" />
+          </Button>
+        </a>
       </div>
     </>
   )

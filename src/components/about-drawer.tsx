@@ -127,12 +127,12 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/80 z-50" />
-        <Drawer.Content className="bg-background text-foreground fixed right-0 top-0 flex h-full w-[90vw] flex-col rounded-l-lg border p-6 sm:w-[90vw] lg:w-[50vw] z-50 overflow-y-auto">
+        <Drawer.Content className="bg-background text-foreground fixed right-0 top-0 flex h-full flex-col rounded-l-lg border p-4 sm:p-6 w-full sm:w-[90vw] md:w-[75vw] lg:w-[45vw] z-50">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="max-w-3xl mx-auto w-full"
+            className="relative flex flex-col flex-1 max-w-3xl mx-auto w-full overflow-y-auto"
           >
             <motion.div variants={fadeIn}>
               <div className="space-y-4">
@@ -143,7 +143,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
               </div>
             </motion.div>
 
-            <div className="mt-6 space-y-6">
+            <div className="mt-6 space-y-6 pb-20">
               <motion.div variants={fadeIn}>
                 {/* Project Description */}
                 <h3 className="text-lg font-semibold mb-2">Project Overview</h3>
@@ -334,9 +334,11 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                   Pruthi, P., Narayan, J., & Agarwal, P. (2024). CROSSROAD: A tool to cross-compare SSRs across species and families. CSIR-IGIB.
                 </code>
               </motion.div>
+            </div>
 
-              {/* Close button */}
-              <div className="flex justify-end pt-4">
+            {/* Close button - Fixed at bottom */}
+            <div className="fixed bottom-0 right-0 w-full sm:w-[90vw] md:w-[75vw] lg:w-[45vw] p-4 border-t bg-background/80 backdrop-blur-xl">
+              <div className="flex justify-end max-w-3xl mx-auto w-full">
                 <Drawer.Close asChild>
                   <Button variant="outline">Close</Button>
                 </Drawer.Close>

@@ -58,7 +58,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 // --- Icons and Animation ---
 import {
-   Loader2, AlertCircle, Download, TableIcon, DatabaseZap, Info, Search,
+    AlertCircle, Download, TableIcon, DatabaseZap, Info, Search,
    AreaChart, GitBranch,
   ChevronUpIcon, ChevronDownIcon,
   ChevronFirstIcon,
@@ -67,11 +67,12 @@ import {
   ChevronRightIcon,
   Filter,
   ChevronDown,
-  File, // Added File icon
+  File as FileIcon, // Renamed File icon
   BookOpen, // Added BookOpen icon
   History, // Added History icon
   Settings2, // Added Settings2 icon
   Sparkles, // Added Sparkles icon
+  Database, // Added Database icon
 } from "lucide-react";
 import { motion } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
@@ -99,6 +100,7 @@ import ReferenceSsrDistributionPlot from '@/components/plots/ReferenceSsrDistrib
 import SsrGeneGenomeDotPlot from '@/components/plots/SsrGeneGenomeDotPlot'; // Import the new plot
 import UpsetPlot from '@/components/plots/UpsetPlot'; // Import the UpSet plot component
 
+import { AnalysisBottomNav } from '@/components/AnalysisBottomNav'; // Import the new component
 // --- Constants ---
 const API_BASE_URL = import.meta.env.VITE_CROSSROAD_API_URL || 'http://127.0.0.1:8000';
 const POLLING_INTERVAL = 3000;
@@ -108,27 +110,62 @@ const POLLING_INTERVAL = 3000;
 const PLOT_KEYS_TO_FETCH = ['plot_source', 'hssr_data', 'hotspot', 'ssr_gene_intersect', 'gene_country_sankey'] as const;
 type PlotKey = typeof PLOT_KEYS_TO_FETCH[number];
 
+// Map plot keys to the actual filenames for the demo job
+const DEMO_FILE_MAPPING: Record<PlotKey, string> = {
+  'plot_source': 'mergedOut.tsv',
+  'hssr_data': 'hssr_data.csv',
+  'hotspot': 'mutational_hotspot.csv',
+  'ssr_gene_intersect': 'ssr_genecombo.tsv',
+  'gene_country_sankey': 'ref_ssr_genecombo.csv'
+};
+
 // Type for the result of a single query within useQueries
 type PlotQueryResult = UseQueryResult<{ plotKey: PlotKey; data: any[] | null; error?: string }, Error>;
 
 // TextShine component for loading state
-export function TextShine() {
+export function TextShine({ text = "Fetching data..." }: { text?: string }) {
   return (
-    <motion.h1
-      className={cn(
-        "bg-[linear-gradient(110deg,#bfbfbf,35%,#000,50%,#bfbfbf,75%,#bfbfbf)] dark:bg-[linear-gradient(110deg,#404040,35%,#fff,50%,#404040,75%,#404040)]",
-        "bg-[length:200%_100%] bg-clip-text text-base font-medium text-transparent",
+    <div className="flex flex-col items-center justify-center gap-2">
+      <motion.h1
+        className={cn(
+          "bg-[linear-gradient(110deg,#bfbfbf,35%,#000,50%,#bfbfbf,75%,#bfbfbf)] dark:bg-[linear-gradient(110deg,#404040,35%,#fff,50%,#404040,75%,#404040)]",
+          "bg-[length:200%_100%] bg-clip-text text-base font-medium text-transparent",
+        )}
+        initial={{ backgroundPosition: "200% 0" }}
+        animate={{ backgroundPosition: "-200% 0" }}
+        transition={{
+          repeat: Infinity,
+          duration: 2,
+          ease: "linear",
+        }}
+      >
+        {text}
+      </motion.h1>
+      <div className="flex items-center gap-2">
+        <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/50" style={{ animationDelay: "0.2s" }}></span>
+        <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/50" style={{ animationDelay: "0.4s" }}></span>
+        <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/50" style={{ animationDelay: "0.6s" }}></span>
+      </div>
+    </div>
+  );
+}
+
+// Add this after the TextShine component and before DataTable
+function Loader({ className, text }: { className?: string; text?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center gap-4 p-8", className)}>
+      <div className="relative">
+        <div className="h-24 w-24 rounded-full border-4 border-muted"></div>
+        <div className="absolute left-0 top-0 h-24 w-24 animate-spin rounded-full border-4 border-t-primary"></div>
+        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-muted"></div>
+        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 animate-spin rounded-full border-4 border-t-primary" style={{ animationDirection: "reverse" }}></div>
+        <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-muted"></div>
+        <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 animate-spin rounded-full border-4 border-t-primary"></div>
+      </div>
+      {text && (
+        <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
       )}
-      initial={{ backgroundPosition: "200% 0" }}
-      animate={{ backgroundPosition: "-200% 0" }}
-      transition={{
-        repeat: Infinity,
-        duration: 2,
-        ease: "linear",
-      }}
-    >
-      Fetching data...
-    </motion.h1>
+    </div>
   );
 }
 
@@ -515,6 +552,9 @@ export const Route = createFileRoute('/analysis/')({
   component: HomePage
 });
 
+// Sample job ID for direct demo loading
+const DEMO_JOB_ID = "monkey-pox-demo-001";
+
 function HomePage() {
   // --- State ---
   const [jobId, setJobId] = useState<string | null>(null);
@@ -768,6 +808,113 @@ function HomePage() {
     // setPreviousJobIdInput(''); // Or keep it populated? Let's keep it for now.
   };
 
+  // --- Function to load demo job results ---
+  const handleLoadDemoJob = () => {
+    // Use a predefined demo job ID
+    const demoJobId = DEMO_JOB_ID;
+    
+    console.log(`Loading demo job: ${demoJobId}`);
+    toast.info(`Loading Monkeypox Virus demo analysis...`, { id: 'demo-load' });
+
+    // Clear existing job state and query cache
+    queryClient.removeQueries({ queryKey: ['jobStatus', jobId], exact: true });
+    queryClient.removeQueries({ queryKey: ['plotData', jobId], exact: true });
+    setJobId(null);
+    setJobUrls(null);
+    setJobStatus(null);
+    setJobMessage(null);
+    setJobProgress(null);
+    setJobError(null);
+
+    // For demo, use the sample files in public/sample/jobOut
+    // Use absolute paths from the web root
+    const newUrls = {
+      statusUrl: `/sample/jobOut/status.json`,
+      resultsBase: `/sample/jobOut/`,
+      downloadAll: `/sample/jobOut/`,
+    };
+
+    console.log("Demo URLs set to:", newUrls);
+
+    // Set job ID and URLs to trigger the queries
+    setJobId(demoJobId);
+    setJobUrls(newUrls);
+    setJobStatus('completed'); // Set directly to completed
+    setJobMessage(`Loaded demo Monkeypox Virus analysis.`);
+    setSubmittedReferenceId("NC_063383.1"); // Set from status.json
+
+    toast.success("Demo analysis loaded successfully!", { id: 'demo-load' });
+  };
+
+  // --- Function to load example data ---
+  const handleLoadExample = async (exampleName: string) => {
+    if (exampleName !== 'monkeypox') {
+      toast.warning(`Example "${exampleName}" not implemented yet.`);
+      return;
+    }
+
+    toast.info("Loading Monkeypox example data...", { id: 'load-example' });
+
+    const filePaths = {
+      fasta: '/sample/1.fa',
+      bed: '/sample/2.bed',
+      tsv: '/sample/3.tsv',
+    };
+
+    try {
+      // Fetch files concurrently
+      const [fastaRes, bedRes, tsvRes] = await Promise.all([
+        fetch(filePaths.fasta),
+        fetch(filePaths.bed),
+        fetch(filePaths.tsv),
+      ]);
+
+      if (!fastaRes.ok) throw new Error(`Failed to fetch ${filePaths.fasta}: ${fastaRes.statusText}`);
+      // Optional files might not exist or fail, handle gracefully
+      const bedOk = bedRes.ok;
+      const tsvOk = tsvRes.ok;
+
+      const fastaBlob = await fastaRes.blob();
+      const bedBlob = bedOk ? await bedRes.blob() : null;
+      const tsvBlob = tsvOk ? await tsvRes.blob() : null;
+
+      // Create File objects
+      const fastaFile = new File([fastaBlob], '1.fa', { type: fastaBlob.type });
+      const bedFile = bedBlob ? new File([bedBlob], '2.bed', { type: bedBlob.type }) : null;
+      const tsvFile = tsvBlob ? new File([tsvBlob], '3.tsv', { type: tsvBlob.type }) : null;
+
+      // Create FileList objects using DataTransfer
+      const createFileList = (file: File | null): FileList | undefined => {
+        if (!file) return undefined;
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        return dataTransfer.files;
+      };
+
+      const fastaFileList = createFileList(fastaFile);
+      const bedFileList = createFileList(bedFile);
+      const tsvFileList = createFileList(tsvFile);
+
+      // Update form state
+      if (fastaFileList) form.setFieldValue('fasta_file', fastaFileList);
+      form.setFieldValue('gene_bed', bedFileList); // Set to undefined if null
+      form.setFieldValue('categories_file', tsvFileList); // Set to undefined if null
+
+      // Optionally clear other fields or set defaults if needed
+      form.setFieldValue('reference_id', ''); // Clear reference ID for example
+      form.setFieldValue('flanks', false); // Reset flanks
+      form.setFieldValue('perf_params', defaultPerfParams); // Reset perf params
+
+      toast.success("Monkeypox example data loaded!", { id: 'load-example' });
+
+      // Explicitly trigger validation after setting fields
+      form.validateAllFields('change');
+
+    } catch (error: any) {
+      console.error("Error loading example data:", error);
+      toast.error(`Failed to load example data: ${error.message}`, { id: 'load-example' });
+    }
+  };
   // --- Fetch Multiple Table Data via Arrow using useQueries ---
   const plotDataQueries = useQueries({
     queries: PLOT_KEYS_TO_FETCH.map((plotKey) => ({
@@ -776,7 +923,15 @@ function HomePage() {
         if (!jobStatus || jobStatus !== 'completed' || !jobUrls?.resultsBase) {
           return { plotKey, data: null }; // Return null if prerequisites not met
         }
-        const url = `${API_BASE_URL}${jobUrls.resultsBase}${plotKey}`;
+        
+        // For the demo job, use direct path without API_BASE_URL and use the correct filename
+        const isDemo = jobId === DEMO_JOB_ID;
+        const url = isDemo 
+          ? `${jobUrls.resultsBase}${DEMO_FILE_MAPPING[plotKey]}` 
+          : `${API_BASE_URL}${jobUrls.resultsBase}${plotKey}`;
+        
+        console.log(`Fetching ${plotKey} from ${url}`);
+        
         try {
           const resp = await fetch(url);
           if (resp.status === 204) { // Handle No Content
@@ -785,6 +940,76 @@ function HomePage() {
           if (!resp.ok) {
             throw new Error(`Status ${resp.status}`);
           }
+
+          // For demo job, we need to parse CSV/TSV files instead of arrow binary format
+          if (isDemo) {
+            const text = await resp.text();
+            if (!text || text.trim() === '') {
+              return { plotKey, data: [] }; // Empty text means no data
+            }
+            
+            // Determine delimiter based on file extension
+            const isCSV = url.endsWith('.csv');
+            const delimiter = isCSV ? ',' : '\t';
+            
+            // Special handling for ssr_genecombo.tsv which has a problematic format
+            if (plotKey === 'ssr_gene_intersect' || plotKey === 'gene_country_sankey') {
+              // Clean up the file content
+              const cleanedText = text
+                .replace(/\r\n/g, '\n')  // Normalize line endings
+                .replace(/\n\s+/g, ' ')  // Replace newlines with spaces if they're in the middle of data
+                .replace(/\s{2,}/g, ' '); // Reduce multiple spaces to single spaces
+              
+              // Re-split into proper lines
+              const lines = cleanedText.split('\n').filter(line => line.trim() !== '');
+              
+              // Handle header - in these files, header columns are the important ones
+              const headers = lines[0].split(delimiter).map(h => h.trim());
+              
+              // Create a structured object for each row
+              const data = [];
+              for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(delimiter).map(v => v.trim());
+                const row: { [key: string]: any } = {};
+                
+                // Map values to headers, ensuring no undefined values
+                headers.forEach((header, index) => {
+                  row[header] = (index < values.length) ? values[index] : '';
+                });
+                
+                // Ensure required fields exist based on the plot type
+                if (plotKey === 'ssr_gene_intersect' && row['gene'] && row['ssr_position']) {
+                  data.push(row);
+                }
+                else if (plotKey === 'gene_country_sankey' && row['gene'] && row['country']) {
+                  data.push(row);
+                }
+                else if (plotKey !== 'ssr_gene_intersect' && plotKey !== 'gene_country_sankey') {
+                  data.push(row);
+                }
+              }
+              
+              return { plotKey, data };
+            }
+            
+            // Standard parsing for other files
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(delimiter).map(h => h.trim());
+            
+            // Parse data rows
+            const data = lines.slice(1).map(line => {
+              const values = line.split(delimiter);
+              const row: { [key: string]: any } = {};
+              headers.forEach((header, index) => {
+                row[header] = values[index] ? values[index].trim() : '';
+              });
+              return row;
+            });
+            
+            return { plotKey, data };
+          }
+          
+          // For regular jobs, continue with Arrow format
           const buffer = await resp.arrayBuffer();
           if (buffer.byteLength === 0) {
              return { plotKey, data: [] }; // Empty buffer means no data
@@ -905,7 +1130,7 @@ function HomePage() {
            {/* File Inputs Card */}
             <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
               <CardHeader>
-                 <CardTitle className="text-lg font-medium flex items-center"><File className="mr-2 h-5 w-5" /> Upload Your Data</CardTitle>
+                 <CardTitle className="text-lg font-medium flex items-center"><FileIcon className="mr-2 h-5 w-5" /> Upload Your Data</CardTitle>
                  <CardDescription>Provide the required FASTA file and optional metadata.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1067,8 +1292,7 @@ function HomePage() {
                  >
                    {submitMutation.isPending || isValidating ? (
                      <>
-                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                       {isValidating ? 'Validating...' : 'Submitting Job...'}
+                       <Loader text="Submitting analysis job..." className="scale-75" />
                      </>
                    ) : (
                      <>
@@ -1107,21 +1331,35 @@ function HomePage() {
             <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
                <CardHeader>
                  <CardTitle className="text-lg font-medium flex items-center"><History className="mr-2 h-5 w-5" /> Load Previous Job</CardTitle>
-                 <CardDescription>Enter a Job ID to retrieve past results.</CardDescription>
+                 <CardDescription>Enter a Job ID to retrieve past results or try a demo.</CardDescription>
                </CardHeader>
-               <CardContent className="flex flex-col sm:flex-row items-stretch gap-3">
-                 <Label htmlFor="previous-job-id" className="sr-only">Previous Job ID</Label>
-                 <Input
-                   id="previous-job-id"
-                   placeholder="Enter Job ID..."
-                   value={previousJobIdInput}
-                   onChange={(e) => setPreviousJobIdInput(e.target.value)}
-                   className="flex-grow border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md h-9 text-sm shadow-inner"
-                   onKeyDown={(e) => { if (e.key === 'Enter') handleLoadPreviousJob(); }}
-                 />
-                 <Button onClick={handleLoadPreviousJob} disabled={!previousJobIdInput.trim() || submitMutation.isPending || (jobId === previousJobIdInput.trim() && jobStatus !== 'failed')} variant="secondary" className="rounded-md px-4 py-2 text-sm font-medium shadow-sm">
-                   <Search className="mr-1.5 h-4 w-4" /> Load Job
-                 </Button>
+               <CardContent className="space-y-4">
+                 <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                   <Label htmlFor="previous-job-id" className="sr-only">Previous Job ID</Label>
+                   <Input
+                     id="previous-job-id"
+                     placeholder="Enter Job ID..."
+                     value={previousJobIdInput}
+                     onChange={(e) => setPreviousJobIdInput(e.target.value)}
+                     className="flex-grow border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md h-9 text-sm shadow-inner"
+                     onKeyDown={(e) => { if (e.key === 'Enter') handleLoadPreviousJob(); }}
+                   />
+                   <Button onClick={handleLoadPreviousJob} disabled={!previousJobIdInput.trim() || submitMutation.isPending || (jobId === previousJobIdInput.trim() && jobStatus !== 'failed')} variant="secondary" className="rounded-md px-4 py-2 text-sm font-medium shadow-sm">
+                     <Search className="mr-1.5 h-4 w-4" /> Load Job
+                   </Button>
+                 </div>
+                 
+                 <div className="flex items-center justify-center">
+                   <Button 
+                     onClick={handleLoadDemoJob} 
+                     disabled={submitMutation.isPending || (jobId === DEMO_JOB_ID && jobStatus === 'completed')}
+                     variant="outline"
+                     className="w-full bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-indigo-200 dark:border-indigo-800/60 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/40 dark:hover:to-blue-900/40 transition-all"
+                   >
+                     <Database className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                     Load Monkeypox Virus Demo Analysis
+                   </Button>
+                 </div>
                </CardContent>
             </Card>
          </div>
@@ -1343,20 +1581,24 @@ function HomePage() {
                       {/* Loading Skeletons for sections if data is loading */}
                       {isAnyDataLoading && !isAnyResultAvailable && (
                          <div className="space-y-8">
-                            {/* Add TextShine component */}
-                            <div className="flex justify-center items-center p-4">
-                              <TextShine />
-                            </div>
+                            {/* Add Loader component with specific message */}
+                            <Loader text="Loading analysis results..." />
                             {/* Show skeletons matching the card structure */}
                             <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-40 w-full" /><Separator /><Skeleton className="h-60 w-full" /></CardContent></Card>
                             <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-40 w-full" /><Separator /><Skeleton className="h-60 w-full" /></CardContent></Card>
                          </div>
                       )}
 
-                      {/* Use TextShine for any loading state that's not failed or completed */}
+                      {/* Use Loader for any loading state that's not failed or completed */}
                       {jobId && jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed' && (
-                        <div className="flex justify-center items-center p-8">
-                          <TextShine />
+                        <div className="flex justify-center items-center">
+                          <Loader 
+                            text={jobStatus === 'running' 
+                              ? 'Processing your analysis...' 
+                              : jobStatus === 'queued' 
+                              ? 'Job queued, waiting to start...'
+                              : 'Initializing analysis...'}
+                          />
                         </div>
                       )}
 
@@ -1387,6 +1629,8 @@ function HomePage() {
             {/* <a href="YOUR_GITHUB_REPO_LINK" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a> */}
           </div>
        </motion.div>
+{/* --- Bottom Navigation Bar --- */}
+        <AnalysisBottomNav onLoadExample={handleLoadExample} onLoadDemo={handleLoadDemoJob} />
     </div>
   );
 }

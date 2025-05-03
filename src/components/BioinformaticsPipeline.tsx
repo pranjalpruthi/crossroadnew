@@ -40,8 +40,8 @@ const pipelineSteps = [
   {
     id: 4,
     date: "Now",
-    title: "Web Platform",
-    description: "Interactive UI",
+    title: "croSSRoad API Platform",
+    description: "Beta Testing Phase",
     icon: Globe,
     completed: false
   },

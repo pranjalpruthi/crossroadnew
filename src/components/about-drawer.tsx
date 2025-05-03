@@ -136,9 +136,9 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
           >
             <motion.div variants={fadeIn}>
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold">About CROSSROAD</h2>
+                <h2 className="text-2xl font-bold">About croSSRoad</h2>
                 <p className="text-muted-foreground">
-                  CROSSROAD is a comprehensive tool for comparing Simple Sequence Repeats (SSRs) across multiple species and families, enabling deeper insights into genomic evolution and diversity.
+                croSSRoad is a comprehensive tool for comparing Simple Sequence Repeats (SSRs) across multiple species and families, enabling deeper insights into genomic evolution and diversity.
                 </p>
               </div>
             </motion.div>
@@ -148,7 +148,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                 {/* Project Description */}
                 <h3 className="text-lg font-semibold mb-2">Project Overview</h3>
                 <p className="text-muted-foreground">
-                  CROSSROAD provides a robust framework for analyzing SSR variations across genomes, identifying hotspots, and tracing evolutionary patterns. Its high-throughput pipeline handles genomic data efficiently, with a comprehensive suite of visualization tools for exploring complex relationships within SSR distributions.
+                croSSRoad provides a robust framework for analyzing SSR variations across genomes, identifying hotspots, and tracing evolutionary patterns. Its high-throughput pipeline handles genomic data efficiently, with a comprehensive suite of visualization tools for exploring complex relationships within SSR distributions.
                 </p>
               </motion.div>
 
@@ -331,7 +331,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
               <motion.div variants={fadeIn}>
                 <h3 className="text-lg font-semibold mb-2">Citation</h3>
                 <code className="block text-sm bg-muted p-4 rounded-md">
-                  Pruthi, P., Narayan, J., & Agarwal, P. (2024). CROSSROAD: A tool to cross-compare SSRs across species and families. CSIR-IGIB.
+                  Pruthi, P., Narayan, J., & Agarwal, P. (2024). croSSRoad: A tool to cross-compare SSRs across species and families. CSIR-IGIB.
                 </code>
               </motion.div>
             </div>

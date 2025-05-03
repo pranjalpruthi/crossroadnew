@@ -3,7 +3,6 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { motion } from 'framer-motion'
 import { ArrowRight, Database, LineChart, Cpu, Code, Dna, Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/about/')({  component: AboutPage,})
@@ -39,8 +38,7 @@ function AboutPage() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <Badge className="mb-3 sm:mb-4 px-3 py-1 sm:px-3.5 sm:py-1.5" variant="outline">CROSSROAD v0.2.3</Badge>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">🚀 Crossroad</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">🚀 croSSRoad</h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Analyze SSR patterns across genomes with scale, speed, and style
           </p>

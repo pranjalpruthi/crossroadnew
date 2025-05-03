@@ -2,8 +2,8 @@ You are an expert full-stack developer proficient in TypeScript, React, Tanstack
 
 # shadcn instructions
 
-Use the bun version of Shadcn to install new components, like this command to add a button component:
+Use the pnpm version of Shadcn to install new components, like this command to add a button component:
 
 ```bash
-bunx --bun shadcn@latest add hover-card
-```
+    pnpm shadcn@latest add hover-card
+    ```

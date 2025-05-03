@@ -2,8 +2,17 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { ArrowRight, BookOpen, GitCompare, Database, BarChart3, Microscope, Dna, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import BioinformaticsPipeline from '@/components/BioinformaticsPipeline';
+import { InstallationCommands } from '@/components/InstallationCommands';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { ApiStatusBadge, DevStatusBadge } from "@/components/ApiStatusBadge";
+import {
+  AnimatedSpan,
+  Terminal,
+  TypingAnimation,
+} from "@/components/magicui/terminal";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Define the route for the landing page
 export const Route = createFileRoute('/')({
@@ -35,6 +44,128 @@ function FeatureCard({
   );
 }
 
+// Terminal Demo Component for Drawer
+function DrawerTerminalDemo() {
+  return (
+    <Terminal className="w-full h-[500px] overflow-hidden">
+      <TypingAnimation>~/Documents/GitHub/crossroad main*</TypingAnimation>
+      <TypingAnimation delay={800}>crossroad_dev ❯ crossroad</TypingAnimation>
+
+      <AnimatedSpan delay={1500} className="text-green-500">
+        <span>✔ Preflight checks.</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={2000} className="text-green-500">
+        <span>✔ Verifying dependencies.</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={2500} className="text-green-500">
+        <span>✔ Loading genome analysis toolkit.</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={3000} className="text-blue-500">
+        <span>ℹ Available installation methods:</span>
+        <span className="pl-2">- conda/mamba</span>
+        <span className="pl-2">- pip/PyPI</span>
+      </AnimatedSpan>
+
+      <TypingAnimation delay={3500}>mamba install -c jitendralab -c bioconda -c conda-forge crossroad -y</TypingAnimation>
+
+      <AnimatedSpan delay={4500} className="text-green-500">
+        <span>✔ Downloading packages...</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={5000} className="text-green-500">
+        <span>✔ Resolving dependencies...</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={5500} className="text-green-500">
+        <span>✔ Installing croSSRoad CLI...</span>
+      </AnimatedSpan>
+
+      <AnimatedSpan delay={6000} className="text-blue-500">
+        <span>ℹ Installation complete!</span>
+      </AnimatedSpan>
+
+      <TypingAnimation delay={6500} className="text-muted-foreground">
+        Run 'crossroad --help' to see available commands.
+      </TypingAnimation>
+    </Terminal>
+  );
+}
+
+// Installation Instructions Component
+function InstallationInstructionsDrawer() {
+  return (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="outline" size="lg" className="gap-2">
+          <Terminal className="h-5 w-5">
+            <span className="sr-only">Terminal</span>
+          </Terminal>
+          View Installation Guide
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-6xl">
+          <DrawerHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <DrawerTitle>Install croSSRoad CLI</DrawerTitle>
+          </DrawerHeader>
+          
+          <ScrollArea className="h-[calc(100vh-15vh-8rem)] px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-16">
+              {/* Left side: Installation Commands */}
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-card p-6">
+                  <h3 className="text-lg font-medium mb-4">For large-scale genomic analyses, use our command-line toolkit:</h3>
+                  <InstallationCommands />
+                  
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-1">Anaconda:</h4>
+                      <a 
+                        href="https://anaconda.org/jitendralab/crossroad" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        anaconda.org/jitendralab/crossroad
+                      </a>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-1">PyPI:</h4>
+                      <a 
+                        href="https://pypi.org/project/crossroad-cli/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        pypi.org/project/crossroad-cli
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side: Terminal Demo */}
+              <div className="h-[500px] rounded-lg border bg-card">
+                <DrawerTerminalDemo />
+              </div>
+            </div>
+          </ScrollArea>
+
+          {/* Footer with close button - Fixed at bottom */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/80 backdrop-blur-xl">
+            <div className="flex justify-end max-w-6xl mx-auto w-full">
+              <Button variant="outline" className="w-24">Close</Button>
+            </div>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
 // Main Landing Page Component
 function LandingPage() {
   return (
@@ -46,7 +177,11 @@ function LandingPage() {
 
       {/* Hero Section */}
       <section className="container relative mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-20 md:py-24 lg:py-32 lg:pb-36">
-        <Badge className="mb-4 sm:mb-8 px-3 py-1 sm:px-3.5 sm:py-1.5" variant="outline">croSSRoad v0.2.4</Badge>
+        {/* System Status & API Version */}
+        <div className="mb-8 flex flex-wrap gap-2 items-center">
+          <ApiStatusBadge />
+          <DevStatusBadge />
+        </div>
         
         <div className="grid gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           <motion.div
@@ -80,12 +215,19 @@ function LandingPage() {
               transition={{ delay: 0.4, duration: 0.6 }}
             >
               <Link to="/analysis" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto font-semibold"
+                >
                   Start Analysis <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/about" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full sm:w-auto font-semibold"
+                >
                   <BookOpen className="mr-2 h-5 w-5" /> Read Documentation
                 </Button>
               </Link>
@@ -100,7 +242,7 @@ function LandingPage() {
           >
             <div className="w-full h-[400px] rounded-lg bg-muted/30 border backdrop-blur-sm relative overflow-hidden">
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <img src="/logo512.png" alt="Crossroad Logo" className="h-32 w-32 object-contain" />
+                <img src="/logo512.png" alt="croSSRoad Logo" className="h-32 w-32 object-contain" />
                 <p className="text-xl font-medium text-foreground/70 mt-4">SSR Analysis Pipeline</p>
               </div>
               
@@ -192,44 +334,16 @@ function LandingPage() {
             >
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Ready to get started?</h2>
               <p className="text-base sm:text-lg text-muted-foreground">
-                croSSRoad makes it easy to upload your genome sequences and perform complex SSR analysis with just a few clicks.
+                croSSRoad makes it easy to analyze SSR patterns across multiple genomes. Choose the option that works best for you:
               </p>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-2">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-                    <span className="text-xs font-bold text-primary">1</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Upload your FASTA file</p>
-                    <p className="text-muted-foreground">Add genome sequences in FASTA format</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-                    <span className="text-xs font-bold text-primary">2</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Configure parameters</p>
-                    <p className="text-muted-foreground">Set analysis preferences or use defaults</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-                    <span className="text-xs font-bold text-primary">3</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Explore results</p>
-                    <p className="text-muted-foreground">Visualize and download your analysis</p>
-                  </div>
-                </li>
-              </ul>
               
-              <div className="pt-2 sm:pt-4">
-                <Link to="/analysis" className="w-full sm:w-auto inline-block">
-                  <Button size="lg" className="w-full sm:w-auto">
+              <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row gap-3">
+                <Link to="/analysis" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto font-semibold">
                     Go to Analysis <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <InstallationInstructionsDrawer />
               </div>
             </motion.div>
 
@@ -268,6 +382,13 @@ function LandingPage() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Development Timeline Section - MOVED here from above Features */}
+      <section className="border-t py-12 sm:py-20 md:py-24 bg-gradient-to-b from-white/50 to-blue-50/50 dark:from-gray-950/50 dark:to-blue-950/20">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
+          <BioinformaticsPipeline />
         </div>
       </section>
 

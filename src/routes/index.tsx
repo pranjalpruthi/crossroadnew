@@ -176,7 +176,7 @@ function LandingPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="container relative mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-20 md:py-24 lg:py-32 lg:pb-36">
+      <section className="container relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 pb-12 sm:py-20 md:py-24 lg:py-32 lg:pb-36">
         {/* System Status & API Version */}
         <div className="mb-8 flex flex-wrap gap-2 items-center">
           <ApiStatusBadge />

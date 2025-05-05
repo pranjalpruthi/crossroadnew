@@ -266,7 +266,16 @@ function FilePreviewDrawer({ file, isOpen, setIsOpen }: {
             size="sm"
             className="flex items-center gap-1"
             onClick={() => {
+              // Implement actual download
               toast.success(`Downloading ${file.name}...`);
+              
+              // Create a hidden anchor element to trigger the download
+              const link = document.createElement('a');
+              link.href = file.path;
+              link.download = file.id;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
             }}
           >
             <Download className="h-4 w-4" />
@@ -303,8 +312,16 @@ export function ExampleFilesDrawer({ children, onLoadExample, onLoadDemo }: {
   };
 
   const handleDownloadFile = (file: typeof EXAMPLE_FILES[0]) => {
-    // In a real app, this would download the actual file
+    // Implement actual download
     toast.success(`Downloading ${file.name}...`);
+    
+    // Create a hidden anchor element to trigger the download
+    const link = document.createElement('a');
+    link.href = file.path;
+    link.download = file.id;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handlePreviewFile = (file: typeof EXAMPLE_FILES[0]) => {

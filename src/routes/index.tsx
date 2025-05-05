@@ -13,6 +13,7 @@ import {
   TypingAnimation,
 } from "@/components/magicui/terminal";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 // Define the route for the landing page
 export const Route = createFileRoute('/')({
@@ -207,6 +208,20 @@ function LandingPage() {
             >
               A comprehensive tool for analyzing Simple Sequence Repeats (SSRs), identifying mutational hotspots, and exploring evolutionary patterns in genomic data.
             </motion.p>
+            
+            <motion.div
+              className="flex flex-wrap gap-2 pt-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/20 dark:hover:bg-primary/30">#SSRAnalysis</Badge>
+              <Badge variant="secondary" className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 dark:bg-blue-500/20 dark:hover:bg-blue-500/30">#Genomics</Badge>
+              <Badge variant="secondary" className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 dark:bg-purple-500/20 dark:hover:bg-purple-500/30">#BioinformaticsTool</Badge>
+              <Badge variant="secondary" className="bg-green-500/10 hover:bg-green-500/20 text-green-500 dark:bg-green-500/20 dark:hover:bg-green-500/30">#MutationalHotspots</Badge>
+              <Badge variant="secondary" className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 dark:bg-amber-500/20 dark:hover:bg-amber-500/30">#MicrosatelliteMarkers</Badge>
+              <Badge variant="secondary" className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:bg-rose-500/20 dark:hover:bg-rose-500/30">#OpenSource</Badge>
+            </motion.div>
             
             <motion.div 
               className="flex flex-col sm:flex-row gap-3 pt-2 sm:pt-4"

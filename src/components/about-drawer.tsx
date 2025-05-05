@@ -151,22 +151,6 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                 croSSRoad provides a robust framework for analyzing SSR variations across genomes, identifying hotspots, and tracing evolutionary patterns. Its high-throughput pipeline handles genomic data efficiently, with a comprehensive suite of visualization tools for exploring complex relationships within SSR distributions.
                 </p>
               </motion.div>
-
-              <Separator />
-
-              {/* Key Features */}
-              <motion.div variants={fadeIn}>
-                <h3 className="text-lg font-semibold mb-2">Key Features</h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>Comparing SSR variations across genomes at different classification levels</li>
-                  <li>Identifying hotspot genes where SSR variations have accumulated</li>
-                  <li>Tracing evolutionary patterns of SSRs within genes</li>
-                  <li>Detecting conserved SSR markers with flanking regions for primer design</li>
-                  <li>Interactive visualization of complex SSR relationships</li>
-                  <li>Support for both reference-based and reference-free SSR analysis</li>
-                </ul>
-              </motion.div>
-
               <Separator />
 
               {/* Team Section */}
@@ -297,6 +281,21 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                 </motion.div>
               </motion.div>
 
+
+              <Separator />
+
+              {/* Key Features */}
+              <motion.div variants={fadeIn}>
+                <h3 className="text-lg font-semibold mb-2">Key Features</h3>
+                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                  <li>Comparing SSR variations across genomes at different classification levels</li>
+                  <li>Identifying hotspot genes where SSR variations have accumulated</li>
+                  <li>Tracing evolutionary patterns of SSRs within genes</li>
+                  <li>Detecting conserved SSR markers with flanking regions for primer design</li>
+                  <li>Interactive visualization of complex SSR relationships</li>
+                  <li>Support for both reference-based and reference-free SSR analysis</li>
+                </ul>
+              </motion.div>
               <Separator />
 
               {/* Workflow */}

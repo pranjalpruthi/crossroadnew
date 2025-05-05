@@ -25,11 +25,9 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { 
   Download, 
   TableProperties, 
-  Check, 
   Database, 
   FileType, 
   Dna, 
-  ClipboardCopy,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -53,9 +51,9 @@ const BADGE_VARIANTS: Record<string, any> = {
 const EXAMPLE_FILES = [
   {
     id: '1.fa',
-    name: 'Monkeypox Virus Genomes',
+    name: 'Example Genomes',
     type: 'FASTA',
-    description: 'FASTA file containing genomic sequences for Monkeypox virus isolates.',
+    description: 'FASTA file containing genomic sequences for example genomes.',
     icon: <Dna className="h-5 w-5" />,
     path: '/sample/1.fa',
     preview: [
@@ -69,7 +67,7 @@ const EXAMPLE_FILES = [
   },
   {
     id: '3.tsv',
-    name: 'Virus Metadata',
+    name: 'Example Metadata',
     type: 'TSV',
     description: 'TSV file with metadata (category, country, year) for each genome.',
     icon: <Database className="h-5 w-5" />,
@@ -82,7 +80,7 @@ const EXAMPLE_FILES = [
   },
   {
     id: '2.bed',
-    name: 'Gene Locations',
+    name: 'Example Gene Locations',
     type: 'BED',
     description: 'BED file defining gene locations and names.',
     icon: <FileType className="h-5 w-5" />,
@@ -95,10 +93,6 @@ const EXAMPLE_FILES = [
     ]
   }
 ];
-
-// Sample job ID
-const SAMPLE_JOB_ID = "job_1746181625822_a7431a3b";
-
 // Generic data table component
 function DataTable({ columns, data }: { columns: string[], data: Record<string, string>[] }) {
   const tableColumns: ColumnDef<Record<string, string>>[] = columns.map(col => ({
@@ -293,16 +287,8 @@ export function ExampleFilesDrawer({ children, onLoadExample, onLoadDemo }: {
   onLoadDemo?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [copiedJobId, setCopiedJobId] = useState(false);
   const [previewFile, setPreviewFile] = useState<typeof EXAMPLE_FILES[0] | null>(null);
   
-  const copyJobId = () => {
-    navigator.clipboard.writeText(SAMPLE_JOB_ID);
-    setCopiedJobId(true);
-    toast.success("Job ID copied to clipboard");
-    setTimeout(() => setCopiedJobId(false), 2000);
-  };
-
   const handleLoadExample = (exampleId: string) => {
     onLoadExample(exampleId);
     toast.success(`Loaded example: ${exampleId}`);
@@ -344,49 +330,11 @@ export function ExampleFilesDrawer({ children, onLoadExample, onLoadDemo }: {
             <DrawerHeader>
               <DrawerTitle>Example Datasets</DrawerTitle>
               <DrawerDescription>
-                Monkeypox Virus sample files and job ID for testing
+                Example sample files and job ID for testing
               </DrawerDescription>
             </DrawerHeader>
             
             <div className="space-y-6 pb-20">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-100 dark:border-blue-800">
-                <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">Job ID for Sample Dataset:</p>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2 bg-white/80 dark:bg-black/30"
-                      onClick={copyJobId}
-                    >
-                      {copiedJobId ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
-                      {SAMPLE_JOB_ID}
-                    </Button>
-                    <Badge variant="outline" className={copiedJobId ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : ""}>
-                      {copiedJobId ? "Copied!" : "Copy"}
-                    </Badge>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Copy this job ID and paste it into the "Load Previous Job" field to view sample plots and analysis results.
-                </p>
-              </div>
-              
-              {/* Demo Button */}
-              {onLoadDemo && (
-                <div className="flex justify-center mb-4">
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    onClick={handleLoadDemoAnalysis}
-                    className="w-full sm:w-auto bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-indigo-200 dark:border-indigo-800/60"
-                  >
-                    <Database className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                    Load Monkeypox Analysis Demo
-                  </Button>
-                </div>
-              )}
-              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {EXAMPLE_FILES.map((file) => (
                   <motion.div
@@ -508,9 +456,18 @@ export function ExampleFilesDrawer({ children, onLoadExample, onLoadDemo }: {
             </div>
           </div>
           
-          <DrawerFooter className="border-t bg-background/80 backdrop-blur-xl mt-auto">
+          <DrawerFooter className="border-t bg-background/80 backdrop-blur-xl mt-auto sm:flex-row sm:justify-between">
+            {onLoadDemo && (
+              <Button 
+                className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:from-indigo-600 hover:to-blue-600"
+                onClick={handleLoadDemoAnalysis}
+              >
+                <Database className="mr-2 h-4 w-4" />
+                Load Example Analysis Demo
+              </Button>
+            )}
             <DrawerClose asChild>
-              <Button variant="outline" className="w-full sm:w-auto">Close</Button>
+              <Button variant="outline">Close</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>

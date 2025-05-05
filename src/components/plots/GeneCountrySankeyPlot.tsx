@@ -1,19 +1,26 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Info, Network, Maximize2 } from 'lucide-react'; // Added Network, Maximize2
+import { AlertCircle, Info, Network, Maximize2, Filter, X } from 'lucide-react'; // Added Filter, X icons
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button'; // Added Button
-import { Separator } from '@/components/ui/separator'; // Added Separator
-// Import Popover components
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 // Type for the data structure expected from the query result (assuming plot_source)
 interface PlotSourceDataRow {
@@ -59,6 +66,15 @@ function getHslColor(index: number, total: number, saturation = 0.6, lightness =
 
 const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  // Filter state
+  const [selectedGenes, setSelectedGenes] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [isGeneFilterOpen, setIsGeneFilterOpen] = useState(false);
+  const [isCountryFilterOpen, setIsCountryFilterOpen] = useState(false);
+  
+  // Available options for filters
+  const [availableGenes, setAvailableGenes] = useState<string[]>([]);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -84,8 +100,29 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
 
     if (df_proc.length === 0) return null;
 
+    // Update available filters
+    const allGenes = [...new Set(df_proc.map(r => r.gene))].sort();
+    const allCountries = [...new Set(df_proc.map(r => r.country))].sort();
+    
+    // Update filter options when data changes
+    if (JSON.stringify(allGenes) !== JSON.stringify(availableGenes)) {
+      setAvailableGenes(allGenes);
+    }
+    if (JSON.stringify(allCountries) !== JSON.stringify(availableCountries)) {
+      setAvailableCountries(allCountries);
+    }
+
+    // Apply filters if any are selected
+    let filteredData = df_proc;
+    if (selectedGenes.length > 0) {
+      filteredData = filteredData.filter(row => selectedGenes.includes(row.gene));
+    }
+    if (selectedCountries.length > 0) {
+      filteredData = filteredData.filter(row => selectedCountries.includes(row.country));
+    }
+
     // Aggregate link data (gene -> country : count unique genomeIDs)
-    const linkDataMap = df_proc.reduce((acc, row) => {
+    const linkDataMap = filteredData.reduce((acc, row) => {
         const key = `${row.gene}__${row.country}`;
         acc[key] = acc[key] || { gene: row.gene, country: row.country, genomes: new Set<string>() };
         acc[key].genomes.add(row.genomeID);
@@ -116,7 +153,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
     }));
 
     // --- Calculate Stats ---
-    const total_unique_genomes_in_data = new Set(df_proc.map(r => r.genomeID)).size;
+    const total_unique_genomes_in_data = new Set(filteredData.map(r => r.genomeID)).size;
     const total_flow = mappedLinks.reduce((sum, link) => sum + link.value, 0);
     const stats: ProcessedSankeyStats = {
         total_genes: unique_genes.length,
@@ -134,7 +171,30 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
 
     return { chartData, stats };
 
-  }, [queryData]); // Dependency: re-run when queryData changes
+  }, [queryData, selectedGenes, selectedCountries, availableGenes, availableCountries]); // Added dependencies for filters
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSelectedGenes([]);
+    setSelectedCountries([]);
+  };
+
+  // Helper for filter selection
+  const toggleGeneSelection = (gene: string) => {
+    setSelectedGenes(prev => 
+      prev.includes(gene) 
+        ? prev.filter(g => g !== gene) 
+        : [...prev, gene]
+    );
+  };
+
+  const toggleCountrySelection = (country: string) => {
+    setSelectedCountries(prev => 
+      prev.includes(country) 
+        ? prev.filter(c => c !== country) 
+        : [...prev, country]
+    );
+  };
 
   // --- Fullscreen Logic ---
   const chartId = "gene-country-sankey-chart"; // Unique ID
@@ -331,6 +391,84 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
         </CardTitle>
         {/* Button Group */}
         <div className="flex items-center gap-2">
+          {/* Gene Filter */}
+          <Popover open={isGeneFilterOpen} onOpenChange={setIsGeneFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={selectedGenes.length > 0 ? "border-primary text-primary" : ""}>
+                <Filter className="h-4 w-4" />
+                <span className="ml-2">Genes</span>
+                {selectedGenes.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">{selectedGenes.length}</Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Search genes..." />
+                <CommandList className="max-h-[300px]">
+                  <CommandEmpty>No genes found.</CommandEmpty>
+                  <CommandGroup>
+                    {availableGenes.map(gene => (
+                      <CommandItem 
+                        key={gene} 
+                        onSelect={() => toggleGeneSelection(gene)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{gene}</span>
+                        {selectedGenes.includes(gene) && (
+                          <Badge variant="outline" className="ml-2">Selected</Badge>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* Country Filter */}
+          <Popover open={isCountryFilterOpen} onOpenChange={setIsCountryFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={selectedCountries.length > 0 ? "border-primary text-primary" : ""}>
+                <Filter className="h-4 w-4" />
+                <span className="ml-2">Countries</span>
+                {selectedCountries.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">{selectedCountries.length}</Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Search countries..." />
+                <CommandList className="max-h-[300px]">
+                  <CommandEmpty>No countries found.</CommandEmpty>
+                  <CommandGroup>
+                    {availableCountries.map(country => (
+                      <CommandItem 
+                        key={country} 
+                        onSelect={() => toggleCountrySelection(country)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{country}</span>
+                        {selectedCountries.includes(country) && (
+                          <Badge variant="outline" className="ml-2">Selected</Badge>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* Show All / Reset Button */}
+          {(selectedGenes.length > 0 || selectedCountries.length > 0) && (
+            <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+              <X className="h-4 w-4" />
+              <span className="ml-2">Show All</span>
+            </Button>
+          )}
+
           {/* Stats Popover */}
           <Popover>
             <PopoverTrigger asChild>
@@ -363,9 +501,18 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
                     <span className="text-muted-foreground">Total Genome Flow:</span>
                     <Badge variant="secondary">{stats.total_genome_flow.toLocaleString()}</Badge>
                  </div>
+                 
+                 {/* Filter info */}
+                 {(selectedGenes.length > 0 || selectedCountries.length > 0) && (
+                   <>
+                     <Separator className="my-2" />
+                     <p className="text-muted-foreground text-xs">Showing filtered data.</p>
+                   </>
+                 )}
               </div>
             </PopoverContent>
           </Popover>
+
           {/* Fullscreen Button */}
           <Button variant="outline" size="sm" onClick={toggleFullscreen}>
             <Maximize2 className="h-4 w-4" />
@@ -374,8 +521,51 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
         </div>
       </CardHeader>
       <CardContent className="p-4">
+         {/* Filter indicators */}
+         {(selectedGenes.length > 0 || selectedCountries.length > 0) && (
+           <div className="mb-4 flex flex-wrap gap-2">
+             {selectedGenes.length > 0 && (
+               <div className="flex items-center">
+                 <span className="text-xs text-muted-foreground mr-2">Genes:</span>
+                 <div className="flex flex-wrap gap-1">
+                   {selectedGenes.map(gene => (
+                     <Badge key={gene} variant="outline" className="flex items-center gap-1">
+                       {gene}
+                       <X 
+                         className="h-3 w-3 cursor-pointer" 
+                         onClick={() => toggleGeneSelection(gene)}
+                       />
+                     </Badge>
+                   ))}
+                 </div>
+               </div>
+             )}
+             
+             {selectedCountries.length > 0 && (
+               <div className="flex items-center">
+                 <span className="text-xs text-muted-foreground mr-2">Countries:</span>
+                 <div className="flex flex-wrap gap-1">
+                   {selectedCountries.map(country => (
+                     <Badge key={country} variant="outline" className="flex items-center gap-1">
+                       {country}
+                       <X 
+                         className="h-3 w-3 cursor-pointer" 
+                         onClick={() => toggleCountrySelection(country)}
+                       />
+                     </Badge>
+                   ))}
+                 </div>
+               </div>
+             )}
+             
+             <Button variant="ghost" size="sm" className="h-6" onClick={handleResetFilters}>
+               <X className="h-3 w-3" />
+               <span className="ml-1 text-xs">Clear All</span>
+             </Button>
+           </div>
+         )}
+       
          {/* Chart Area takes full width */}
-         {/* Add ID to the chart container div */}
          <div id={chartId} className="relative">
              <ReactECharts
                option={options}

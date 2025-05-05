@@ -12,7 +12,7 @@ import {
 export function ApiStatusBadge() {
   const [status, setStatus] = useState<"operational" | "error" | "loading">("operational") // Default to operational
   const apiUrl = import.meta.env.VITE_CROSSROAD_API_URL
-  const apiVersion = "v0.2.4" // Add API version here
+  const apiVersion = "v0.2.6" // Add API version here
 
   useEffect(() => {
     // Only check API status if we have a URL

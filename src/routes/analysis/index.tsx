@@ -55,6 +55,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { GuideDrawer } from "@/components/GuideDrawer"; // Import the new component
 
 // --- Icons and Animation ---
 import {
@@ -553,7 +554,7 @@ export const Route = createFileRoute('/analysis/')({
 });
 
 // Sample job ID for direct demo loading
-const DEMO_JOB_ID = "monkey-pox-demo-001";
+const DEMO_JOB_ID = "job-demo-001";
 
 function HomePage() {
   // --- State ---
@@ -580,7 +581,7 @@ function HomePage() {
     unfair: 0,
     thread: 50,
     min_repeat_count: 1,
-    min_genome_count: 5,
+    min_genome_count: 4,
   };
 
   // --- Form Initialization ---
@@ -814,7 +815,7 @@ function HomePage() {
     const demoJobId = DEMO_JOB_ID;
     
     console.log(`Loading demo job: ${demoJobId}`);
-    toast.info(`Loading Monkeypox Virus demo analysis...`, { id: 'demo-load' });
+    toast.info(`Loading demo analysis...`, { id: 'demo-load' });
 
     // Clear existing job state and query cache
     queryClient.removeQueries({ queryKey: ['jobStatus', jobId], exact: true });
@@ -840,7 +841,7 @@ function HomePage() {
     setJobId(demoJobId);
     setJobUrls(newUrls);
     setJobStatus('completed'); // Set directly to completed
-    setJobMessage(`Loaded demo Monkeypox Virus analysis.`);
+    setJobMessage(`Loaded demo analysis.`);
     setSubmittedReferenceId("NC_063383.1"); // Set from status.json
 
     toast.success("Demo analysis loaded successfully!", { id: 'demo-load' });
@@ -848,20 +849,25 @@ function HomePage() {
 
   // --- Function to load example data ---
   const handleLoadExample = async (exampleName: string) => {
+    // Reset form state and show loading toast
+    form.reset();
+    
     if (exampleName !== 'monkeypox') {
-      toast.warning(`Example "${exampleName}" not implemented yet.`);
-      return;
+      toast.info(`Loading ${exampleName} example...`, { id: 'load-example' });
+    } else {
+      toast.info("Loading example dataset...", { id: 'load-example' });
     }
-
-    toast.info("Loading Monkeypox example data...", { id: 'load-example' });
-
-    const filePaths = {
-      fasta: '/sample/1.fa',
-      bed: '/sample/2.bed',
-      tsv: '/sample/3.tsv',
-    };
-
+    
+    // Short delay to allow toast to show
+    await new Promise(r => setTimeout(r, 500));
+    
     try {
+      const filePaths = {
+        fasta: '/sample/1.fa',
+        bed: '/sample/2.bed',
+        tsv: '/sample/3.tsv',
+      };
+
       // Fetch files concurrently
       const [fastaRes, bedRes, tsvRes] = await Promise.all([
         fetch(filePaths.fasta),
@@ -905,11 +911,10 @@ function HomePage() {
       form.setFieldValue('flanks', false); // Reset flanks
       form.setFieldValue('perf_params', defaultPerfParams); // Reset perf params
 
-      toast.success("Monkeypox example data loaded!", { id: 'load-example' });
+      toast.success("Example data loaded!", { id: 'load-example' });
 
       // Explicitly trigger validation after setting fields
       form.validateAllFields('change');
-
     } catch (error: any) {
       console.error("Error loading example data:", error);
       toast.error(`Failed to load example data: ${error.message}`, { id: 'load-example' });
@@ -1320,10 +1325,12 @@ function HomePage() {
                  <p>5. Click "Run Analysis"!</p>
                </CardContent>
                <CardFooter>
-                 {/* Placeholder for tutorial link */}
-                  <Button variant="outline" size="sm" className="w-full border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-900/50" onClick={() => toast.info("Tutorial coming soon!")}>
-                    <BookOpen className="mr-2 h-4 w-4" /> View Full Tutorial
-                  </Button>
+                 {/* Tutorial link */}
+                  <GuideDrawer>
+                    <Button variant="outline" size="sm" className="w-full border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-900/50">
+                      <BookOpen className="mr-2 h-4 w-4" /> View Full Tutorial
+                    </Button>
+                  </GuideDrawer>
                </CardFooter>
             </Card>
 
@@ -1357,7 +1364,7 @@ function HomePage() {
                      className="w-full bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-indigo-200 dark:border-indigo-800/60 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/40 dark:hover:to-blue-900/40 transition-all"
                    >
                      <Database className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                     Load Monkeypox Virus Demo Analysis
+                     Load Demo Analysis
                    </Button>
                  </div>
                </CardContent>
@@ -1453,6 +1460,76 @@ function HomePage() {
                         </Card>
                       )}
 
+                      {/* --- Section: SSR Gene Intersection Data & Plots --- */}
+                      {isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] && (
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className="text-lg flex items-center">
+                               <GitBranch className="mr-2 h-5 w-5" /> SSR-Gene Intersection & Reference Distribution
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
+                             {/* SSR Gene Intersection Table */}
+                             <DataTable
+                               data={availableTableData['ssr_gene_intersect'].data}
+                               columns={availableTableData['ssr_gene_intersect'].columns}
+                                caption="SSR-Gene intersection data."
+                               tableName="ssr_gene_intersect"
+                               />
+                               <Separator />
+                               {/* Tabs for SSR Gene Intersection Plots */}
+                               <Tabs defaultValue="ssr_gene_intersect" className="w-full">
+                                 <TabsList className="grid w-full grid-cols-2 mb-4"> {/* Increased bottom margin from 2 to 4 */}
+                                   <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
+                                   <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
+                                 </TabsList>
+                                 <TabsContent value="ssr_gene_intersect">
+                                   <SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} />
+                                 </TabsContent>
+                                 <TabsContent value="ref_ssr_dist">
+                                   {submittedReferenceId ? (
+                                     <ReferenceSsrDistributionPlot
+                                       queryResult={ssrGeneIntersectResult} // Uses the same data source
+                                       referenceId={submittedReferenceId}
+                                     />
+                                   ) : (
+                                     <Alert variant="default">
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle>Reference SSR Distribution</AlertTitle>
+                                        <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
+                                     </Alert>
+                                   )}
+                                 </TabsContent>
+                               </Tabs>
+                             </CardContent>
+                           </Card>
+                        )}
+
+                      {/* --- Section: Hotspot Data & Plot --- */}
+                      {isHotspotAvailable && availableTableData['hotspot'] && (
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className="text-lg flex items-center">
+                               <AreaChart className="mr-2 h-5 w-5" /> Hotspot Data & Plot
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
+                             {/* Hotspot Table */}
+                             <DataTable
+                               data={availableTableData['hotspot'].data}
+                               columns={availableTableData['hotspot'].columns}
+                               caption="Hotspot data."
+                               tableName="hotspot_data"
+                              />
+                              <Separator className="my-4" />
+                              {/* Directly render the plot without extra container */}
+                              <div className="p-4 border rounded-md min-h-[600px]"> {/* Added container with padding, border, and min-height */}
+                                <HotspotPlot queryResult={hotspotResult} />
+                              </div>
+                            </CardContent>
+                          </Card>
+                       )}
+
                       {/* --- Section: HSSR Data & Related Plots --- */}
                       {isHssrDataAvailable && availableTableData['hssr_data'] && (
                          <Card>
@@ -1507,76 +1584,6 @@ function HomePage() {
                             </CardContent>
                           </Card>
                        )}
-
-                      {/* --- Section: Hotspot Data & Plot --- */}
-                      {isHotspotAvailable && availableTableData['hotspot'] && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="text-lg flex items-center">
-                               <AreaChart className="mr-2 h-5 w-5" /> Hotspot Data & Plot
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                             {/* Hotspot Table */}
-                             <DataTable
-                               data={availableTableData['hotspot'].data}
-                               columns={availableTableData['hotspot'].columns}
-                               caption="Hotspot data."
-                               tableName="hotspot_data"
-                              />
-                              <Separator className="my-4" />
-                              {/* Directly render the plot without extra container */}
-                              <div className="p-4 border rounded-md min-h-[600px]"> {/* Added container with padding, border, and min-height */}
-                                <HotspotPlot queryResult={hotspotResult} />
-                              </div>
-                            </CardContent>
-                          </Card>
-                       )}
-
-                      {/* --- Section: SSR Gene Intersection Data & Plots --- */}
-                      {isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="text-lg flex items-center">
-                               <GitBranch className="mr-2 h-5 w-5" /> SSR-Gene Intersection & Reference Distribution
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                             {/* SSR Gene Intersection Table */}
-                             <DataTable
-                               data={availableTableData['ssr_gene_intersect'].data}
-                               columns={availableTableData['ssr_gene_intersect'].columns}
-                                caption="SSR-Gene intersection data."
-                               tableName="ssr_gene_intersect"
-                               />
-                               <Separator />
-                               {/* Tabs for SSR Gene Intersection Plots */}
-                               <Tabs defaultValue="ssr_gene_intersect" className="w-full">
-                                 <TabsList className="grid w-full grid-cols-2 mb-4"> {/* Increased bottom margin from 2 to 4 */}
-                                   <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
-                                   <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
-                                 </TabsList>
-                                 <TabsContent value="ssr_gene_intersect">
-                                   <SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} />
-                                 </TabsContent>
-                                 <TabsContent value="ref_ssr_dist">
-                                   {submittedReferenceId ? (
-                                     <ReferenceSsrDistributionPlot
-                                       queryResult={ssrGeneIntersectResult} // Uses the same data source
-                                       referenceId={submittedReferenceId}
-                                     />
-                                   ) : (
-                                     <Alert variant="default">
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Reference SSR Distribution</AlertTitle>
-                                        <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
-                                     </Alert>
-                                   )}
-                                 </TabsContent>
-                               </Tabs>
-                             </CardContent>
-                           </Card>
-                        )}
 
                       {/* Loading Skeletons for sections if data is loading */}
                       {isAnyDataLoading && !isAnyResultAvailable && (

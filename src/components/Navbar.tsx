@@ -1,13 +1,21 @@
 import { motion } from "framer-motion"
 import { ModeToggle } from '@/components/mode-toggle'
-import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Loader2, Github } from 'lucide-react'
-import { Link, useRouterState, useNavigate } from '@tanstack/react-router'
+import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Github, BarChart2, MoreHorizontal, ExternalLink } from 'lucide-react'
+import { Link, useRouterState } from '@tanstack/react-router'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { AboutDrawer } from "@/components/about-drawer"
 import { GuideDrawer } from "@/components/GuideDrawer"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // --- Constants ---
 const CITATION = `Pruthi, P., Narayan, J., Agarwal, P., Shukla, N., & Bhatia, A. (2024). CHITRA: Chromosome Interactive Tool for Rearrangement Analysis. CSIR-IGIB.`
@@ -49,7 +57,7 @@ function Breadcrumbs() {
   )
 }
 
-function CopyButton() {
+function MoreOptionsDropdown() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(CITATION)
@@ -66,57 +74,44 @@ function CopyButton() {
   }
 
   return (
-    <Button 
-      variant="ghost" 
-      className="h-8 w-8 sm:w-auto hover:bg-background/80 text-sm p-0 sm:p-2"
-      onClick={handleCopy}
-      data-copy-button="true"
-    >
-      <Copy className="h-4 w-4" />
-      <span className="hidden sm:inline-block sm:ml-2">Cite</span>
-    </Button>
-  )
-}
-
-function NavButton({ to, icon: Icon, children }: { to: string; icon: React.ElementType; children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await navigate({ to }); 
-    } catch (error) {
-      console.error("Navigation error:", error);
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <Button 
-      variant="ghost" 
-      className="h-8 w-auto hover:bg-background/80 text-sm p-2"
-      onClick={handleClick}
-      disabled={isLoading}
-      aria-label={`Navigate to ${children}`}
-    >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Icon className="h-4 w-4" />
-      )}
-      <span className="ml-2">{children}</span>
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">More options</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Resources</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <Link to="/about">
+          <DropdownMenuItem className="cursor-pointer">
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Documentation</span>
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
+          <Copy className="mr-2 h-4 w-4" />
+          <span>Cite this project</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <a 
+            href="https://github.com/BioinformaticsOnLine/croSSRoad" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center"
+          >
+            <Github className="mr-2 h-4 w-4" />
+            <span>GitHub</span>
+            <ExternalLink className="ml-auto h-3 w-3" />
+          </a>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 function NavActions() {
-  const handleMobileCopyClick = () => {
-    const desktopCopyButton = document.querySelector('[data-copy-button="true"]') as HTMLButtonElement | null;
-    desktopCopyButton?.click();
-  };
-
   return (
     <>
       <div className="hidden sm:flex items-center gap-1">
@@ -132,21 +127,7 @@ function NavActions() {
             <span className="ml-2">Guide</span>
           </Button>
         </GuideDrawer>
-        <NavButton to="/about" icon={FileText}>
-          Docs
-        </NavButton>
-        <CopyButton />
-        <a 
-          href="https://github.com/BioinformaticsOnLine/croSSRoad" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex"
-        >
-          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
-            <Github className="h-4 w-4" />
-            <span className="ml-2">GitHub</span>
-          </Button>
-        </a>
+        <MoreOptionsDropdown />
       </div>
 
       <div className="flex sm:hidden items-center gap-0.5">
@@ -172,40 +153,7 @@ function NavActions() {
           </Button>
         </GuideDrawer>
         
-        <Link to="/about" aria-label="Documentation">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 p-0 hover:bg-background/80"
-          >
-            <FileText className="h-4 w-4" />
-          </Button>
-        </Link>
-        
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="h-8 w-8 p-0 hover:bg-background/80"
-          onClick={handleMobileCopyClick}
-          aria-label="Copy Citation"
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-
-        <a 
-          href="https://github.com/BioinformaticsOnLine/croSSRoad" 
-          target="_blank" 
-          rel="noopener noreferrer"
-        >
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8 p-0 hover:bg-background/80"
-            aria-label="GitHub"
-          >
-            <Github className="h-4 w-4" />
-          </Button>
-        </a>
+        <MoreOptionsDropdown />
       </div>
     </>
   )
@@ -215,6 +163,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHomePage = pathname === '/'
+  const isAnalysisPage = pathname === '/analysis/'
 
   const config = { auth: { enabled: false } };
   const UserProfile = () => <div className="h-8 w-8 rounded-full bg-muted" />;
@@ -295,7 +244,9 @@ export default function Navbar() {
                 "!p-1 sm:!p-1.5 !px-2 sm:!px-3",
                 isHomePage && !isScrolled ? "!border-0 !bg-transparent" : ""
               )}>
-                <span className="text-sm sm:text-base font-bold tracking-tight">croSSRoad</span> 
+                <span className="text-sm sm:text-base font-bold tracking-tight">
+                  cro<span className="text-primary">SSR</span>oad
+                </span> 
               </ShinyRotatingBorderButton>
             </Link>
             <NavActions />
@@ -305,6 +256,22 @@ export default function Navbar() {
             layout="position"
             className="flex items-center gap-2 sm:gap-3"
           >
+            {!isAnalysisPage && (
+              <Link to="/analysis">
+                <Button size="sm" variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 gap-1.5 hidden sm:flex">
+                  <BarChart2 className="h-4 w-4" />
+                  <span>Start Analysis</span>
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="icon"
+                  className="h-8 w-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90 sm:hidden"
+                  aria-label="Start Analysis"
+                >
+                  <BarChart2 className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
             <div className={clsx(
               "hidden lg:block",
               isHomePage && "hidden"

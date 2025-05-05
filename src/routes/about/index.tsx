@@ -25,13 +25,13 @@ function AboutPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(var(--primary-rgb),0.08),transparent_50%),radial-gradient(circle_at_70%_70%,rgba(var(--primary-rgb),0.05),transparent_50%)]" />
       </div>
 
-      <div className="container mx-auto pt-20 pb-8 sm:py-12 md:py-16 lg:py-20 space-y-6 sm:space-y-8 md:space-y-12 lg:space-y-16 px-4 sm:px-6 max-w-full"> {/* Adjusted space-y */}
+      <div className="container mx-auto pt-24 pb-8 sm:py-12 md:py-16 lg:py-20 space-y-6 sm:space-y-8 md:space-y-12 lg:space-y-16 px-4 sm:px-6 max-w-full"> {/* Added padding top on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,13 +195,13 @@ function AboutPage() {
                     <span>crossroad --help</span>
                   </div>
                   <div className="text-muted-foreground mt-1">
-                    <pre className="text-[8px] sm:text-xs overflow-auto scrollbar-none max-w-full">
+                    <pre className="text-[8px] sm:text-xs overflow-x-auto scrollbar-none max-w-full pb-1">
 {`usage: crossroad [-h] --fasta FASTA --categories CATEGORIES [--gene-bed GENE_BED]
                 [--reference-id REFERENCE_ID] [--output-dir OUTPUT_DIR] [--flanks]
                 [--mono MONO] [--di DI] [--tri TRI] [--tetra TETRA] [--penta PENTA]
                 [--hexa HEXA] [--min-len MIN_LEN] [--max-len MAX_LEN] [--unfair UNFAIR]
-                [--threads THREADS] [--min-repeat-count MIN_REPEAT_COUNT]
-                [--min-genome-count MIN_GENOME_COUNT]`}
+                
+A tool for analyzing Simple Sequence Repeats (SSR) across multiple genomes`}
                     </pre>
                   </div>
                 </div>

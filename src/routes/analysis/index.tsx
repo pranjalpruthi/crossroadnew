@@ -103,7 +103,14 @@ import UpsetPlot from '@/components/plots/UpsetPlot'; // Import the UpSet plot c
 
 import { AnalysisBottomNav } from '@/components/AnalysisBottomNav'; // Import the new component
 // --- Constants ---
-const API_BASE_URL = import.meta.env.VITE_CROSSROAD_API_URL || 'http://127.0.0.1:8000';
+// When in development (import.meta.env.DEV is true), API_BASE_URL is '/api'.
+// Requests like fetch(`${API_BASE_URL}/analyze_ssr/`) become fetch('/api/analyze_ssr/').
+// The Vite proxy (configured in vite.config.js for '/api') intercepts this,
+// strips '/api', and forwards to `https://cr.pranjal.work/analyze_ssr/`.
+// In production, it uses the VITE_CROSSROAD_API_URL or defaults to the production backend.
+const API_BASE_URL = import.meta.env.DEV
+  ? '/api'
+  : (import.meta.env.VITE_CROSSROAD_API_URL || 'https://cr.pranjal.work');
 const POLLING_INTERVAL = 3000;
 
 // Define keys to fetch - plot_source is used by multiple plots

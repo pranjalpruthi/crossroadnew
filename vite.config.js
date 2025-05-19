@@ -17,5 +17,15 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-
+  server: {
+    proxy: {
+      // Proxy API requests to your backend
+      '/api': {
+        target: 'https://cr.pranjal.work', // Your actual backend URL
+        changeOrigin: true,
+        secure: true, // Assuming your backend uses HTTPS with a valid certificate
+        rewrite: (path) => path.replace(/^\/api/, ''), // Remove /api prefix before forwarding
+      },
+    },
+  },
 });

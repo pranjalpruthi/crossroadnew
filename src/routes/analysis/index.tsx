@@ -696,13 +696,8 @@ function HomePage() {
     queryKey: ['jobStatus', jobId],
     queryFn: async () => {
       if (!jobUrls?.statusUrl) return null;
-      // Construct the full URL for fetching job status
-      // jobUrls.statusUrl is expected to be like "/api/job/{job_id}/status"
-      // API_BASE_URL is "/api" in dev, "https://actual.host" in prod
-      // In dev, this becomes "/api" + "/api/job/..." = "/api/api/job/..." which proxy handles
-      // In prod, this becomes "https://actual.host" + "/api/job/..."
-      const fullUrl = `${API_BASE_URL}${jobUrls.statusUrl}`;
-      const response = await fetch(fullUrl);
+      const url = new URL(jobUrls.statusUrl, API_BASE_URL).toString();
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`Status check failed: ${response.status}`);
       return response.json();
     },
@@ -1408,14 +1403,7 @@ function HomePage() {
                  <div className="space-y-4 pt-4">
                     <Separator />
                     <p className="font-semibold text-lg">Results</p>
-                    <Button variant="default" size="sm" onClick={() => {
-                        if (jobUrls?.downloadAll) {
-                          // Construct the full URL for downloading results
-                          // jobUrls.downloadAll is expected to be like "/api/job/{job_id}/download_zip"
-                          const downloadUrl = `${API_BASE_URL}${jobUrls.downloadAll}`;
-                          window.open(downloadUrl, '_blank');
-                        }
-                      }} disabled={!jobUrls?.downloadAll}>
+                    <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(new URL(jobUrls.downloadAll, API_BASE_URL).toString(), '_blank')} disabled={!jobUrls?.downloadAll}>
                         <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
                       </Button>
                     {/* --- Results Structure with Tabs --- */}

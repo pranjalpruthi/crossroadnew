@@ -1562,15 +1562,20 @@ function HomePage() {
                                   <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="gene_country_sankey">
-                                  {isGeneCountrySankeyAvailable ? (
-                                    <GeneCountrySankeyPlot queryResult={geneCountrySankeyResult} />
-                                  ) : isGeneCountrySankeyLoading ? (
+                                  {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
+                                    <GeneCountrySankeyPlot 
+                                      linkDataQueryResult={geneCountrySankeyResult} 
+                                      hotspotDataQueryResult={hssrDataResult} 
+                                    />
+                                  ) : (isGeneCountrySankeyLoading || isHssrDataLoading) ? (
                                     <Skeleton className="h-[400px] w-full" />
-                                  ) : geneCountrySankeyResult?.isError ? (
+                                  ) : (geneCountrySankeyResult?.isError || hssrDataResult?.isError) ? (
                                     <Alert variant="destructive">
                                        <AlertCircle className="h-4 w-4" />
                                        <AlertTitle>Gene → Country Plot Error</AlertTitle>
-                                       <AlertDescription>{geneCountrySankeyResult.error.message || 'Failed to load data.'}</AlertDescription>
+                                       <AlertDescription>
+                                         {geneCountrySankeyResult?.error ? (geneCountrySankeyResult.error as Error).message : 'Failed to load data.'}
+                                       </AlertDescription>
                                     </Alert>
                                   ) : (
                                     <p className="text-sm text-muted-foreground p-4 text-center">Gene → Country data not available.</p>

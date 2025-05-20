@@ -52,9 +52,10 @@ interface ProcessedSankeyStats {
     total_genome_flow: number;
 }
 
-// Props now accept the raw query result
+// Props now accept the raw query result for link data and hotspot gene data
 interface GeneCountrySankeyPlotProps {
-  queryResult: UseQueryResult<QueryFnData, Error>;
+  linkDataQueryResult: UseQueryResult<QueryFnData, Error>; // Data for gene -> country links
+  hotspotDataQueryResult: UseQueryResult<QueryFnData, Error>; // Data for identifying hotspot genes (e.g., hssr_data)
 }
 
 // Helper function to generate HSL colors (similar to Python logic)
@@ -64,8 +65,10 @@ function getHslColor(index: number, total: number, saturation = 0.6, lightness =
     return `hsl(${Math.round(hue * 360)}, ${Math.round(saturation * 100)}%, ${Math.round(lightness * 100)}%)`;
 }
 
-const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResult }) => {
-  const { data: queryData, isLoading, isError, error } = queryResult;
+const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ linkDataQueryResult, hotspotDataQueryResult }) => {
+  const { data: linkQueryData, isLoading: isLoadingLinks, isError: isErrorLinks, error: errorLinks } = linkDataQueryResult;
+  const { data: hotspotQueryData, isLoading: isLoadingHotspots, isError: isErrorHotspots, error: errorHotspots } = hotspotDataQueryResult;
+
   // Filter state
   const [selectedGenes, setSelectedGenes] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -78,29 +81,52 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
-    if (!queryData?.data || !Array.isArray(queryData.data) || queryData.data.length === 0) {
+    if (
+      !linkQueryData?.data || !Array.isArray(linkQueryData.data) || linkQueryData.data.length === 0 ||
+      !hotspotQueryData?.data || !Array.isArray(hotspotQueryData.data) || hotspotQueryData.data.length === 0
+    ) {
       return null;
     }
 
-    // Assuming the data comes from 'plot_source' key
-    const rawData = queryData.data as PlotSourceDataRow[];
+    const rawLinkData = linkQueryData.data as PlotSourceDataRow[];
+    const rawHotspotData = hotspotQueryData.data as PlotSourceDataRow[]; // Assuming same structure or at least a 'gene' field
 
-    // --- Start of processing logic (adapted from Python) ---
-    const df_proc = rawData
-        .filter(row =>
-            row.gene !== null && row.gene !== undefined && row.gene !== '' &&
-            row.country !== null && row.country !== undefined && row.country !== '' &&
-            row.genomeID !== null && row.genomeID !== undefined && row.genomeID !== ''
-        )
-        .map(row => ({
-            gene: String(row.gene!),
-            country: String(row.country!),
-            genomeID: String(row.genomeID!),
-        }));
+    // Extract unique hotspot genes
+    const hotspotGenes = new Set(
+      rawHotspotData
+        .map(row => row.gene)
+        .filter(gene => gene !== null && gene !== undefined && gene !== '')
+        .map(gene => String(gene!))
+    );
 
-    if (df_proc.length === 0) return null;
+    if (hotspotGenes.size === 0) {
+      console.warn("GeneCountrySankeyPlot: No hotspot genes found from hotspotDataQueryResult.");
+      return null; // Or handle as "no data to show"
+    }
 
-    // Update available filters
+    // Filter rawLinkData to include only hotspot genes and valid rows
+    const df_proc_filtered_by_hotspot = rawLinkData
+      .filter(row =>
+        row.gene !== null && row.gene !== undefined && row.gene !== '' &&
+        hotspotGenes.has(String(row.gene!)) && // Check if the gene is a hotspot gene
+        row.country !== null && row.country !== undefined && row.country !== '' &&
+        row.genomeID !== null && row.genomeID !== undefined && row.genomeID !== ''
+      )
+      .map(row => ({
+        gene: String(row.gene!),
+        country: String(row.country!),
+        genomeID: String(row.genomeID!),
+      }));
+
+    if (df_proc_filtered_by_hotspot.length === 0) {
+      console.warn("GeneCountrySankeyPlot: No link data remains after filtering by hotspot genes.");
+      return null;
+    }
+    
+    // df_proc is now the data filtered by hotspot genes
+    const df_proc = df_proc_filtered_by_hotspot;
+
+    // Update available filters based on the *filtered* data
     const allGenes = [...new Set(df_proc.map(r => r.gene))].sort();
     const allCountries = [...new Set(df_proc.map(r => r.country))].sort();
     
@@ -171,7 +197,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
 
     return { chartData, stats };
 
-  }, [queryData, selectedGenes, selectedCountries, availableGenes, availableCountries]); // Added dependencies for filters
+  }, [linkQueryData, hotspotQueryData, selectedGenes, selectedCountries, availableGenes, availableCountries]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -233,6 +259,10 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ queryResu
   // --- End Fullscreen Logic ---
 
   // --- Render Logic ---
+
+  const isLoading = isLoadingLinks || isLoadingHotspots;
+  const isError = isErrorLinks || isErrorHotspots;
+  const error = errorLinks || errorHotspots;
 
   if (isLoading) {
     return (

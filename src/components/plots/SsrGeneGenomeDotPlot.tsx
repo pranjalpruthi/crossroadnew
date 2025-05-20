@@ -380,11 +380,11 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
       subtextStyle: { fontSize: 12, color: stats?.reference_genome ? referenceColor : '#666' }
     },
     grid: {
-        left: '10%', // Keep horizontal margins for labels
-        right: '10%',
-        bottom: '1%', // Reduced bottom padding
-        top: 80,    // Use fixed pixel value for top margin
-        containLabel: true // Let ECharts try to contain labels within the grid area
+        left: '10%', 
+        right: '15%', // Further increased right margin for toolbox and y-axis dataZoom
+        bottom: '12%', 
+        top: 80,    
+        containLabel: true 
     },
     tooltip: {
       trigger: 'item', // Trigger on individual points
@@ -473,7 +473,7 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
     toolbox: {
         show: true,
         orient: 'vertical',
-        right: 10,
+        right: 35, // Position toolbox further from the edge
         top: 'center',
         itemSize: 12,
         feature: {
@@ -483,11 +483,11 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
             saveAsImage: { show: true, title: 'Save Image' }
         }
     },
-    dataZoom: [ // Use filtered axis length for dynamic height calculation
+    dataZoom: [ 
         { type: 'inside', xAxisIndex: 0, filterMode: 'filter', zoomOnMouseWheel: true, moveOnMouseMove: true },
-        { type: 'slider', xAxisIndex: 0, filterMode: 'filter', bottom: 30, height: 15 },
+        { type: 'slider', xAxisIndex: 0, filterMode: 'filter', bottom: 20, height: 15 }, 
         { type: 'inside', yAxisIndex: 0, filterMode: 'filter', zoomOnMouseWheel: true, moveOnMouseMove: true },
-        { type: 'slider', yAxisIndex: 0, filterMode: 'filter', right: 40, width: 15 }
+        { type: 'slider', yAxisIndex: 0, filterMode: 'filter', right: 10, width: 15 } // Position y-slider to the right of toolbox
     ],
   };
 

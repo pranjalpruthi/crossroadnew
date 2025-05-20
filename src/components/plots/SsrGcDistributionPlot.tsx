@@ -250,14 +250,14 @@ const SsrGcDistributionPlot: React.FC<SsrGcDistributionPlotProps> = ({ queryResu
     grid: {
         left: '8%', // Adjust margins for labels/axis
         right: '15%', // Adjust for visualMap
-        bottom: '15%', // Adjust for rotated labels
-        containLabel: false // Let automargin handle axis titles
+        bottom: '22%', // Increased bottom margin for dataZoom and labels
+        containLabel: false // Let automargin handle axis titles, but we need space
     },
     xAxis: {
       type: 'category',
       name: 'Genome ID',
       nameLocation: 'middle',
-      nameGap: 50, // Increase gap for rotated labels
+      nameGap: 50, // Keep this gap for the name from the axis line
       data: chartData.map(item => item.genomeID),
       axisLabel: {
           interval: 0, // Show all labels
@@ -336,7 +336,7 @@ const SsrGcDistributionPlot: React.FC<SsrGcDistributionPlotProps> = ({ queryResu
             start: 0, // Default start percentage
             end: 50, // Default end percentage (show first 50% initially) - adjust as needed
             height: 20, // Height of the slider
-            bottom: 40, // Position above the bottom margin
+            bottom: 25, // Positioned lower, within the new grid bottom margin
         },
         {
             type: 'inside', // Enable zooming/panning inside the chart area

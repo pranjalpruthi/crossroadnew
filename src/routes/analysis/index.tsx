@@ -696,7 +696,7 @@ function HomePage() {
     queryKey: ['jobStatus', jobId],
     queryFn: async () => {
       if (!jobUrls?.statusUrl) return null;
-      const url = new URL(jobUrls.statusUrl, API_BASE_URL).toString();
+      const url = import.meta.env.DEV ? jobUrls.statusUrl : `${API_BASE_URL}${jobUrls.statusUrl}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Status check failed: ${response.status}`);
       return response.json();
@@ -938,9 +938,14 @@ function HomePage() {
         
         // For the demo job, use direct path without API_BASE_URL and use the correct filename
         const isDemo = jobId === DEMO_JOB_ID;
-        const url = isDemo 
-          ? `${jobUrls.resultsBase}${DEMO_FILE_MAPPING[plotKey]}` 
-          : `${API_BASE_URL}${jobUrls.resultsBase}${plotKey}`;
+        let url: string;
+        if (isDemo) {
+          url = `${jobUrls.resultsBase}${DEMO_FILE_MAPPING[plotKey]}`;
+        } else {
+          url = import.meta.env.DEV
+            ? `${jobUrls.resultsBase}${plotKey}` // In dev, jobUrls.resultsBase already has /api, Vite handles it
+            : `${API_BASE_URL}${jobUrls.resultsBase}${plotKey}`; // In prod, prepend full API_BASE_URL
+        }
         
         console.log(`Fetching ${plotKey} from ${url}`);
         
@@ -1403,7 +1408,10 @@ function HomePage() {
                  <div className="space-y-4 pt-4">
                     <Separator />
                     <p className="font-semibold text-lg">Results</p>
-                    <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(new URL(jobUrls.downloadAll, API_BASE_URL).toString(), '_blank')} disabled={!jobUrls?.downloadAll}>
+                    <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(
+                      import.meta.env.DEV ? jobUrls.downloadAll : `${API_BASE_URL}${jobUrls.downloadAll}`,
+                      '_blank'
+                    )} disabled={!jobUrls?.downloadAll}>
                         <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
                       </Button>
                     {/* --- Results Structure with Tabs --- */}

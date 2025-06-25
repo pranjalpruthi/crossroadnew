@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm exec vite --port 3000 --host",
+    "dev": "pnpm exec vite --port 5000 --host",
     "start": "pnpm exec vite --port 3000 --host",
     "build": "pnpm vite build && pnpm tsc",
     "serve": "pnpm exec vite preview",

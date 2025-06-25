@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'; // Added useMemo
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueries, type UseQueryResult } from '@tanstack/react-query'; // Added useQueries, UseQueryResult
@@ -103,14 +103,16 @@ import UpsetPlot from '@/components/plots/UpsetPlot'; // Import the UpSet plot c
 
 import { AnalysisBottomNav } from '@/components/AnalysisBottomNav'; // Import the new component
 // --- Constants ---
-// When in development (import.meta.env.DEV is true), API_BASE_URL is '/api'.
-// Requests like fetch(`${API_BASE_URL}/analyze_ssr/`) become fetch('/api/analyze_ssr/').
-// The Vite proxy (configured in vite.config.js for '/api') intercepts this,
-// strips '/api', and forwards to `https://cr.pranjal.work/analyze_ssr/`.
-// In production, it uses the VITE_CROSSROAD_API_URL or defaults to the production backend.
-const API_BASE_URL = import.meta.env.DEV
+/**
+ * API_BASE_URL determines the base path for API requests.
+ * - In development (import.meta.env.DEV is true), it uses '/api' to leverage Vite's proxy (configured in vite.config.js).
+ *   Requests like fetch(`${API_BASE_URL}/analyze_ssr/`) become fetch('/api/analyze_ssr/'), and the proxy forwards them to the backend.
+ * - In production, it checks if VITE_CROSSROAD_API_URL is set. If it is, it uses '/api' to ensure requests go through the proxy
+ *   set in vite.config.js for preview mode. If not set, it falls back to a default production backend URL.
+ */
+const API_BASE_URL = import.meta.env.DEV || import.meta.env.VITE_CROSSROAD_API_URL
   ? '/api'
-  : (import.meta.env.VITE_CROSSROAD_API_URL || 'https://cr.pranjal.work');
+  : 'https://cr.pranjal.work';
 const POLLING_INTERVAL = 3000;
 
 // Define keys to fetch - plot_source is used by multiple plots
@@ -174,6 +176,31 @@ function Loader({ className, text }: { className?: string; text?: string }) {
         <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
       )}
     </div>
+  );
+}
+
+// Skeleton for tab content while loading
+function TabContentSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-1/3" />
+        <Skeleton className="h-4 w-2/3" />
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+        <Separator />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -306,10 +333,12 @@ function DataTable<TData>({ data, columns, caption, tableName }: DataTableProps<
     
     const csvContent = [
       headers.join(','),
-      ...table.getRowModel().rows.map(row => 
+      ...table.getFilteredRowModel().rows.map(row => 
         headers.map(header => {
           const value = row.getValue(header);
-          return typeof value === 'string' ? `"${value}"` : value;
+          const stringValue = value === null || value === undefined ? '' : String(value);
+          // Escape double quotes by doubling them and wrap in double quotes
+          return `"${stringValue.replace(/"/g, '""')}"`;
         }).join(',')
       )
     ].join('\n');
@@ -1416,205 +1445,214 @@ function HomePage() {
                       </Button>
                     {/* --- Results Structure with Tabs --- */}
                     <div className="mt-6 space-y-8"> {/* Increased spacing */}
-
-                      {/* --- Section: Core Data (plot_source) --- */}
-                      {isPlotSourceAvailable && availableTableData['plot_source'] && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center">
-                              <TableIcon className="mr-2 h-5 w-5" /> Core Data & Related Plots
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-8"> {/* Increased spacing between items */}
-                            {/* Plot Source Table */}
-                            <DataTable
-                              data={availableTableData['plot_source'].data}
-                              columns={availableTableData['plot_source'].columns}
-                              caption="Core analysis data."
-                              tableName="core_data"
-                            />
-                            <Separator />
-                            {/* Tabs for Plots derived from Plot Source */}
-                            <Tabs defaultValue="relative_abundance" className="w-full">
-                              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4">  {/* Updated to 8 columns */}
-                                <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5">Rel. Abundance</TabsTrigger>
-                                <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5">Rel. Density</TabsTrigger>
-                                <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5">Cat → Country</TabsTrigger>
-                                <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5">Motif Conserv.</TabsTrigger>
-                                <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5">Motif Heatmap</TabsTrigger>
-                                <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5">SSR Conserv.</TabsTrigger>
-                                <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5">SSR GC Dist.</TabsTrigger>
-                                <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5">UpSet Plot</TabsTrigger>
-                              </TabsList>
-                              <TabsContent value="relative_abundance">
-                                <RelativeAbundancePlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="relative_density">
-                                <RelativeDensityPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="category_country_sankey">
-                                <CategoryCountrySankeyPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="motif_conservation">
-                                <MotifConservationPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="motif_distribution_heatmap">
-                                <MotifDistributionHeatmap queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="ssr_conservation">
-                                <SsrConservationPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="ssr_gc_distribution">
-                                <SsrGcDistributionPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                              <TabsContent value="upset_plot">
-                                <UpsetPlot queryResult={plotSourceResult} />
-                              </TabsContent>
-                            </Tabs>
-                          </CardContent>
-                        </Card>
+                      
+                      {/* Catchy phrase while loading */}
+                      {isAnyDataLoading && (
+                        <div className="flex justify-center py-8">
+                          <TextShine text="Unraveling genetic secrets, one sequence at a time..." />
+                        </div>
                       )}
 
-                      {/* --- Section: SSR Gene Intersection Data & Plots --- */}
-                      {isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="text-lg flex items-center">
-                               <GitBranch className="mr-2 h-5 w-5" /> SSR-Gene Intersection & Reference Distribution
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                             {/* SSR Gene Intersection Table */}
-                             <DataTable
-                               data={availableTableData['ssr_gene_intersect'].data}
-                               columns={availableTableData['ssr_gene_intersect'].columns}
-                                caption="SSR-Gene intersection data."
-                               tableName="ssr_gene_intersect"
-                               />
-                               <Separator />
-                               {/* Tabs for SSR Gene Intersection Plots */}
-                               <Tabs defaultValue="ssr_gene_intersect" className="w-full">
-                                 <TabsList className="grid w-full grid-cols-2 mb-4"> {/* Increased bottom margin from 2 to 4 */}
-                                   <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
-                                   <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
-                                 </TabsList>
-                                 <TabsContent value="ssr_gene_intersect">
-                                   <SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} />
-                                 </TabsContent>
-                                 <TabsContent value="ref_ssr_dist">
-                                   {submittedReferenceId ? (
-                                     <ReferenceSsrDistributionPlot
-                                       queryResult={ssrGeneIntersectResult} // Uses the same data source
-                                       referenceId={submittedReferenceId}
-                                     />
-                                   ) : (
-                                     <Alert variant="default">
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Reference SSR Distribution</AlertTitle>
-                                        <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
-                                     </Alert>
-                                   )}
-                                 </TabsContent>
-                               </Tabs>
-                             </CardContent>
-                           </Card>
-                        )}
+                      <Tabs defaultValue="core_data" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+                          <TabsTrigger value="core_data">Core Data & Plots</TabsTrigger>
+                          <TabsTrigger value="ssr_gene_intersection">SSR-Gene Intersection</TabsTrigger>
+                          <TabsTrigger value="hotspot_data">Hotspot Data & Plot</TabsTrigger>
+                          <TabsTrigger value="hssr_data">HSSR Data & Plots</TabsTrigger>
+                        </TabsList>
 
-                      {/* --- Section: Hotspot Data & Plot --- */}
-                      {isHotspotAvailable && availableTableData['hotspot'] && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="text-lg flex items-center">
-                               <AreaChart className="mr-2 h-5 w-5" /> Hotspot Data & Plot
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                             {/* Hotspot Table */}
-                             <DataTable
-                               data={availableTableData['hotspot'].data}
-                               columns={availableTableData['hotspot'].columns}
-                               caption="Hotspot data."
-                               tableName="hotspot_data"
-                              />
-                              <Separator className="my-4" />
-                              {/* Directly render the plot without extra container */}
-                              <div className="p-4 border rounded-md min-h-[600px]"> {/* Added container with padding, border, and min-height */}
-                                <HotspotPlot queryResult={hotspotResult} />
-                              </div>
-                            </CardContent>
-                          </Card>
-                       )}
+                        <TabsContent value="core_data">
+                          {isPlotSourceLoading ? <TabContentSkeleton /> : isPlotSourceAvailable && availableTableData['plot_source'] ? (
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-lg flex items-center">
+                                  <TableIcon className="mr-2 h-5 w-5" /> Core Data & Related Plots
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-8"> {/* Increased spacing between items */}
+                                <Tabs defaultValue="category_country_sankey" className="w-full">
+                                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4">  {/* Updated to 8 columns */}
+                                    <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5">Cat → Country</TabsTrigger>
+                                    <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5">SSR GC Dist.</TabsTrigger>
+                                    <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5">Motif Conserv.</TabsTrigger>
+                                    <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5">SSR Conserv.</TabsTrigger>
+                                    <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5">UpSet Plot</TabsTrigger>
+                                    <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5">Rel. Abundance</TabsTrigger>
+                                    <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5">Rel. Density</TabsTrigger>
+                                    <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5">Motif Heatmap</TabsTrigger>
+                                  </TabsList>
+                                  <TabsContent value="category_country_sankey">
+                                    <CategoryCountrySankeyPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="ssr_gc_distribution">
+                                    <SsrGcDistributionPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="motif_conservation">
+                                    <MotifConservationPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="ssr_conservation">
+                                    <SsrConservationPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="upset_plot">
+                                    <UpsetPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="relative_abundance">
+                                    <RelativeAbundancePlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="relative_density">
+                                    <RelativeDensityPlot queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                  <TabsContent value="motif_distribution_heatmap">
+                                    <MotifDistributionHeatmap queryResult={plotSourceResult} />
+                                  </TabsContent>
+                                </Tabs>
+                                <Separator />
+                                <DataTable
+                                  data={availableTableData['plot_source'].data}
+                                  columns={availableTableData['plot_source'].columns}
+                                  caption="Core analysis data."
+                                  tableName="core_data"
+                                />
+                              </CardContent>
+                            </Card>
+                          ) : !isAnyDataLoading && (
+                            <Alert><Info className="h-4 w-4" /><AlertTitle>No Core Data</AlertTitle><AlertDescription>Core data is not available for this job.</AlertDescription></Alert>
+                          )}
+                        </TabsContent>
 
-                      {/* --- Section: HSSR Data & Related Plots --- */}
-                      {isHssrDataAvailable && availableTableData['hssr_data'] && (
-                         <Card>
-                           <CardHeader>
-                             <CardTitle className="text-lg flex items-center">
-                               <DatabaseZap className="mr-2 h-5 w-5" /> HSSR Data & Related Plots
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                             {/* HSSR Table */}
-                             <DataTable
-                               data={availableTableData['hssr_data'].data}
-                               columns={availableTableData['hssr_data'].columns}
-                               caption="HSSR data."
-                               tableName="hssr_data"
-                              />
-                              <Separator />
-                              {/* Tabs for Plots derived from HSSR/GeneCountry */}
-                              <Tabs defaultValue="gene_country_sankey" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 mb-4"> {/* Increased bottom margin from 2 to 4 */}
-                                  <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5">Gene → Country</TabsTrigger>
-                                  <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5">Temporal Dist.</TabsTrigger>
-                                  <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="gene_country_sankey">
-                                  {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
-                                    <GeneCountrySankeyPlot 
-                                      linkDataQueryResult={geneCountrySankeyResult} 
-                                      hotspotDataQueryResult={hssrDataResult} 
-                                    />
-                                  ) : (isGeneCountrySankeyLoading || isHssrDataLoading) ? (
-                                    <Skeleton className="h-[400px] w-full" />
-                                  ) : (geneCountrySankeyResult?.isError || hssrDataResult?.isError) ? (
-                                    <Alert variant="destructive">
-                                       <AlertCircle className="h-4 w-4" />
-                                       <AlertTitle>Gene → Country Plot Error</AlertTitle>
-                                       <AlertDescription>
-                                         {geneCountrySankeyResult?.error ? (geneCountrySankeyResult.error as Error).message : 'Failed to load data.'}
-                                       </AlertDescription>
-                                    </Alert>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground p-4 text-center">Gene → Country data not available.</p>
-                                  )}
-                                </TabsContent>
-                                <TabsContent value="temporal_scatter">
-                                  {/* Uses hssr_data */} 
-                                  <TemporalFacetedScatterPlot queryResult={hssrDataResult} />
-                                </TabsContent>
-                                <TabsContent value="ssr_gene_genome_dot">
-                                  {/* Uses hssr_data */} 
-                                  <SsrGeneGenomeDotPlot
-                                    queryResult={hssrDataResult}
-                                    referenceId={submittedReferenceId}
+                        <TabsContent value="ssr_gene_intersection">
+                          {isSsrGeneIntersectLoading ? <TabContentSkeleton /> : isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] ? (
+                             <Card>
+                               <CardHeader>
+                                 <CardTitle className="text-lg flex items-center">
+                                   <GitBranch className="mr-2 h-5 w-5" /> SSR-Gene Intersection & Reference Distribution
+                                 </CardTitle>
+                               </CardHeader>
+                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
+                                   <Tabs defaultValue="ssr_gene_intersect" className="w-full">
+                                     <TabsList className="grid w-full grid-cols-2 mb-4"> {/* Increased bottom margin from 2 to 4 */}
+                                       <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
+                                       <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
+                                     </TabsList>
+                                     <TabsContent value="ssr_gene_intersect">
+                                       <SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} />
+                                     </TabsContent>
+                                     <TabsContent value="ref_ssr_dist">
+                                       {submittedReferenceId ? (
+                                         <ReferenceSsrDistributionPlot
+                                           queryResult={ssrGeneIntersectResult} // Uses the same data source
+                                           referenceId={submittedReferenceId}
+                                         />
+                                       ) : (
+                                         <Alert variant="default">
+                                            <Info className="h-4 w-4" />
+                                            <AlertTitle>Reference SSR Distribution</AlertTitle>
+                                            <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
+                                         </Alert>
+                                       )}
+                                     </TabsContent>
+                                   </Tabs>
+                                   <Separator />
+                                 <DataTable
+                                   data={availableTableData['ssr_gene_intersect'].data}
+                                   columns={availableTableData['ssr_gene_intersect'].columns}
+                                    caption="SSR-Gene intersection data."
+                                   tableName="ssr_gene_intersect"
+                                   />
+                                 </CardContent>
+                               </Card>
+                            ) : !isAnyDataLoading && (
+                              <Alert><Info className="h-4 w-4" /><AlertTitle>No SSR-Gene Intersection Data</AlertTitle><AlertDescription>SSR-Gene Intersection data is not available for this job.</AlertDescription></Alert>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="hotspot_data">
+                          {isHotspotLoading ? <TabContentSkeleton /> : isHotspotAvailable && availableTableData['hotspot'] ? (
+                             <Card>
+                               <CardHeader>
+                                 <CardTitle className="text-lg flex items-center">
+                                   <AreaChart className="mr-2 h-5 w-5" /> Hotspot Data & Plot
+                                 </CardTitle>
+                               </CardHeader>
+                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
+                                  <div className="p-4 border rounded-md min-h-[600px]"> {/* Added container with padding, border, and min-height */}
+                                    <HotspotPlot queryResult={hotspotResult} />
+                                  </div>
+                                  <Separator className="my-4" />
+                                 <DataTable
+                                   data={availableTableData['hotspot'].data}
+                                   columns={availableTableData['hotspot'].columns}
+                                   caption="Hotspot data."
+                                   tableName="hotspot_data"
                                   />
-                                </TabsContent>
-                              </Tabs>
-                            </CardContent>
-                          </Card>
-                       )}
+                                </CardContent>
+                              </Card>
+                           ) : !isAnyDataLoading && (
+                            <Alert><Info className="h-4 w-4" /><AlertTitle>No Hotspot Data</AlertTitle><AlertDescription>Hotspot data is not available for this job.</AlertDescription></Alert>
+                           )}
+                        </TabsContent>
 
-                      {/* Loading Skeletons for sections if data is loading */}
-                      {isAnyDataLoading && !isAnyResultAvailable && (
-                         <div className="space-y-8">
-                            {/* Add Loader component with specific message */}
-                            <Loader text="Loading analysis results..." />
-                            {/* Show skeletons matching the card structure */}
-                            <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-40 w-full" /><Separator /><Skeleton className="h-60 w-full" /></CardContent></Card>
-                            <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-40 w-full" /><Separator /><Skeleton className="h-60 w-full" /></CardContent></Card>
-                         </div>
-                      )}
+                        <TabsContent value="hssr_data">
+                          {isHssrDataLoading ? <TabContentSkeleton /> : isHssrDataAvailable && availableTableData['hssr_data'] ? (
+                             <Card>
+                               <CardHeader>
+                                 <CardTitle className="text-lg flex items-center">
+                                   <DatabaseZap className="mr-2 h-5 w-5" /> HSSR Data & Related Plots
+                                 </CardTitle>
+                               </CardHeader>
+                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
+                                  <Tabs defaultValue="gene_country_sankey" className="w-full">
+                                    <TabsList className="grid w-full grid-cols-3 mb-4"> {/* Increased bottom margin from 2 to 4 */}
+                                      <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5">Gene → Country</TabsTrigger>
+                                      <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5">Temporal Dist.</TabsTrigger>
+                                      <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="gene_country_sankey">
+                                      {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
+                                        <GeneCountrySankeyPlot 
+                                          linkDataQueryResult={geneCountrySankeyResult} 
+                                          hotspotDataQueryResult={hssrDataResult} 
+                                        />
+                                      ) : (isGeneCountrySankeyLoading || isHssrDataLoading) ? (
+                                        <Skeleton className="h-[400px] w-full" />
+                                      ) : (geneCountrySankeyResult?.isError || hssrDataResult?.isError) ? (
+                                        <Alert variant="destructive">
+                                           <AlertCircle className="h-4 w-4" />
+                                           <AlertTitle>Gene → Country Plot Error</AlertTitle>
+                                           <AlertDescription>
+                                             {geneCountrySankeyResult?.error ? (geneCountrySankeyResult.error as Error).message : 'Failed to load data.'}
+                                           </AlertDescription>
+                                        </Alert>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground p-4 text-center">Gene → Country data not available.</p>
+                                      )}
+                                    </TabsContent>
+                                    <TabsContent value="temporal_scatter">
+                                      {/* Uses hssr_data */} 
+                                      <TemporalFacetedScatterPlot queryResult={hssrDataResult} />
+                                    </TabsContent>
+                                    <TabsContent value="ssr_gene_genome_dot">
+                                      {/* Uses hssr_data */} 
+                                      <SsrGeneGenomeDotPlot
+                                        queryResult={hssrDataResult}
+                                        referenceId={submittedReferenceId}
+                                      />
+                                    </TabsContent>
+                                  </Tabs>
+                                  <Separator />
+                                 <DataTable
+                                   data={availableTableData['hssr_data'].data}
+                                   columns={availableTableData['hssr_data'].columns}
+                                   caption="HSSR data."
+                                   tableName="hssr_data"
+                                  />
+                                </CardContent>
+                              </Card>
+                           ) : !isAnyDataLoading && (
+                            <Alert><Info className="h-4 w-4" /><AlertTitle>No HSSR Data</AlertTitle><AlertDescription>HSSR data is not available for this job.</AlertDescription></Alert>
+                           )}
+                        </TabsContent>
+                      </Tabs>
 
                       {/* Use Loader for any loading state that's not failed or completed */}
                       {jobId && jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed' && (
@@ -1630,7 +1668,7 @@ function HomePage() {
                       )}
 
                       {/* Message if no results at all */}
-                      {!isAnyDataLoading && !isAnyResultAvailable && (
+                      {!isAnyDataLoading && !isAnyResultAvailable && jobStatus === 'completed' && (
                         <Alert>
                           <Info className="h-4 w-4" />
                           <AlertTitle>No Results Generated</AlertTitle>
@@ -1647,15 +1685,6 @@ function HomePage() {
          </motion.div>
        )}
 
-       {/* --- Footer --- */}
-       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-20 text-center text-sm text-muted-foreground"> {/* Increased margin */}
-         <p>Crossroad: Developed at CSIR-Institute of Genomics and Integrative Biology.</p>
-         <p>Contributors: Pranjal Pruthi, Preeti Agarwal, Dr. Jitendra Narayan</p>
-         <div className="mt-2">
-            <Link to="/about" className="text-primary hover:underline mr-4">About</Link>
-            {/* <a href="YOUR_GITHUB_REPO_LINK" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub</a> */}
-          </div>
-       </motion.div>
 {/* --- Bottom Navigation Bar --- */}
         <AnalysisBottomNav onLoadExample={handleLoadExample} onLoadDemo={handleLoadDemoJob} />
     </div>

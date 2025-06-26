@@ -1,10 +1,11 @@
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { ModeToggle } from '@/components/mode-toggle'
 import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Github, BarChart2, MoreHorizontal, ExternalLink } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
+import { FlipButton } from "@/components/animate-ui/buttons/flip"
 import { toast } from "sonner"
 import { AboutDrawer } from "@/components/about-drawer"
 import { GuideDrawer } from "@/components/GuideDrawer"
@@ -112,9 +113,24 @@ function MoreOptionsDropdown() {
 }
 
 function NavActions() {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(CITATION)
+      toast.success("Citation copied to clipboard", {
+        description: "You can now paste it in your document",
+        duration: 2000,
+      })
+    } catch (err) {
+      toast.error("Failed to copy citation", {
+        description: "Please try again or copy manually",
+        duration: 2000,
+      })
+    }
+  }
+
   return (
     <>
-      <div className="hidden sm:flex items-center gap-1">
+      <div className="hidden lg:flex items-center gap-1">
         <AboutDrawer>
           <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
             <Info className="h-4 w-4" />
@@ -127,13 +143,34 @@ function NavActions() {
             <span className="ml-2">Guide</span>
           </Button>
         </GuideDrawer>
-        <MoreOptionsDropdown />
+        <Link to="/about">
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Documentation</span>
+          </Button>
+        </Link>
+        <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2" onClick={handleCopy}>
+          <Copy className="mr-2 h-4 w-4" />
+          <span>Cite this project</span>
+        </Button>
+        <a
+          href="https://github.com/BioinformaticsOnLine/croSSRoad"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center"
+        >
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+            <Github className="mr-2 h-4 w-4" />
+            <span>GitHub</span>
+            <ExternalLink className="ml-auto h-3 w-3" />
+          </Button>
+        </a>
       </div>
 
-      <div className="flex sm:hidden items-center gap-0.5">
+      <div className="flex lg:hidden items-center gap-0.5">
         <AboutDrawer>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             className="h-8 w-8 p-0 hover:bg-background/80"
             aria-label="About"
@@ -141,10 +178,10 @@ function NavActions() {
             <Info className="h-4 w-4" />
           </Button>
         </AboutDrawer>
-        
+
         <GuideDrawer>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             className="h-8 w-8 p-0 hover:bg-background/80"
             aria-label="Guide"
@@ -152,7 +189,7 @@ function NavActions() {
             <BookOpen className="h-4 w-4" />
           </Button>
         </GuideDrawer>
-        
+
         <MoreOptionsDropdown />
       </div>
     </>
@@ -258,18 +295,25 @@ export default function Navbar() {
           >
             {!isAnalysisPage && (
               <Link to="/analysis">
-                <Button size="sm" variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 gap-1.5 hidden sm:flex">
-                  <BarChart2 className="h-4 w-4" />
-                  <span>Start Analysis</span>
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="icon"
-                  className="h-8 w-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90 sm:hidden"
-                  aria-label="Start Analysis"
-                >
-                  <BarChart2 className="h-4 w-4" />
-                </Button>
+                <FlipButton
+                  from="top"
+                  frontText={<>
+                    <BarChart2 className="h-4 w-4" />
+                    <span className="ml-2">Start Analysis</span>
+                  </>}
+                  backText="Analyze Now"
+                  className="h-8 gap-1.5 hidden sm:flex"
+                  frontClassName="bg-primary text-primary-foreground"
+                  backClassName="bg-primary/90"
+                />
+                <FlipButton
+                  from="top"
+                  frontText={<BarChart2 className="h-4 w-4" />}
+                  backText="Go"
+                  className="h-8 w-8 p-0 sm:hidden"
+                  frontClassName="bg-primary text-primary-foreground"
+                  backClassName="bg-primary/90"
+                />
               </Link>
             )}
             <div className={clsx(

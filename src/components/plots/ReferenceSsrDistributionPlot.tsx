@@ -6,6 +6,7 @@ import { AlertCircle, Info, BarChartHorizontal, Maximize2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from "@/components/theme-provider";
 import * as echarts from 'echarts/core';
 import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, ToolboxComponent } from 'echarts/components';
@@ -62,6 +63,7 @@ interface ReferenceSsrDistributionPlotProps {
 
 const ReferenceSsrDistributionPlot: React.FC<ReferenceSsrDistributionPlotProps> = ({ queryResult, referenceId }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -135,7 +137,7 @@ const ReferenceSsrDistributionPlot: React.FC<ReferenceSsrDistributionPlotProps> 
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         // Calculate height based on data when exiting fullscreen
         const chartData = processedData?.chartData;
@@ -267,7 +269,7 @@ const ReferenceSsrDistributionPlot: React.FC<ReferenceSsrDistributionPlotProps> 
                 return `${count.toLocaleString()} (${percentage}%)`;
             },
             fontSize: 9,
-            color: '#333'
+            color: resolvedTheme === 'dark' ? '#ccc' : '#333'
         },
         itemStyle: {
             // Use a color palette or a fixed color
@@ -348,7 +350,7 @@ const ReferenceSsrDistributionPlot: React.FC<ReferenceSsrDistributionPlotProps> 
                style={{ height: `${chartHeight}px`, width: '100%' }}
                notMerge={true}
                lazyUpdate={true}
-               theme={"light"}
+               theme={resolvedTheme}
              />
          </div>
          {/* Removed the grid layout and stats column div */}

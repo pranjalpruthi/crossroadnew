@@ -11,6 +11,7 @@ import { ScatterChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, ToolboxComponent, VisualMapComponent, MarkAreaComponent, MarkLineComponent, DataZoomComponent } from 'echarts/components';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useTheme } from "@/components/theme-provider";
 import {
   Popover,
   PopoverContent,
@@ -101,9 +102,18 @@ function getMotifColor(motif: string, motifMap: Map<string, string>): string {
 }
 
 // Size scaling logic from Python code
-function calculateMarkerSize(repeat: number, minRepeat: number, maxRepeat: number): number {
-    const absoluteMinSize = 4;
-    const absoluteMaxSize = 20;
+function calculateMarkerSize(repeat: number, minRepeat: number, maxRepeat: number, totalPoints: number): number {
+    const absoluteMinSize = 2;
+    let absoluteMaxSize = 15;
+
+    // Reduce max size if there are many points to avoid clutter
+    if (totalPoints > 500) {
+        absoluteMaxSize = 12;
+    }
+    if (totalPoints > 2000) {
+        absoluteMaxSize = 8;
+    }
+
     const sizeRange = maxRepeat - minRepeat;
 
     if (sizeRange <= 0) {
@@ -135,6 +145,7 @@ function calculateMarkerSize(repeat: number, minRepeat: number, maxRepeat: numbe
 
 const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult, referenceId }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // --- State for Filters ---
   const [selectedGenes, setSelectedGenes] = useState<string[]>([]);
@@ -206,7 +217,7 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
     // Apply scaling and prepare final data structure for ECharts using *filtered* data
     const plotData: PlotPointData[] = filtered_df.map(row => {
         const isRef = !!referenceId && row.genomeID === referenceId;
-        const markerSize = calculateMarkerSize(row.repeat, minRepeat, maxRepeat);
+        const markerSize = calculateMarkerSize(row.repeat, minRepeat, maxRepeat, filtered_df.length);
         return {
             ...row,
             isReference: isRef,
@@ -376,8 +387,15 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
       subtext: `${stats?.total_points ?? 0} data points shown. ${stats?.reference_genome ? `Reference: ${stats.reference_genome}` : (referenceId ? 'Reference not in filtered data' : 'No Reference')}`,
       left: 'center',
       top: 5,
-      textStyle: { fontSize: 16, fontWeight: 'bold' },
-      subtextStyle: { fontSize: 12, color: stats?.reference_genome ? referenceColor : '#666' }
+      textStyle: { 
+        fontSize: 16, 
+        fontWeight: 'bold',
+        color: resolvedTheme === 'dark' ? '#ccc' : '#333'
+      },
+      subtextStyle: { 
+        fontSize: 12, 
+        color: stats?.reference_genome ? referenceColor : (resolvedTheme === 'dark' ? '#aaa' : '#666') 
+      }
     },
     grid: {
         left: '10%', 
@@ -411,8 +429,9 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
           interval: 0, // Show all labels initially
           rotate: -45,
           fontSize: 9,
+          color: resolvedTheme === 'dark' ? '#ccc' : '#333'
       },
-      axisLine: { show: true, lineStyle: { color: 'black' } },
+      axisLine: { show: true, lineStyle: { color: resolvedTheme === 'dark' ? '#ccc' : '#333' } },
       axisTick: { show: true, alignWithLabel: true },
       splitLine: { show: false }, // No vertical grid lines
     },
@@ -425,10 +444,11 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
       axisLabel: {
           interval: 0, // Show all labels
           fontSize: 9,
+          color: resolvedTheme === 'dark' ? '#ccc' : '#333'
       },
-      axisLine: { show: true, lineStyle: { color: 'black' } },
+      axisLine: { show: true, lineStyle: { color: resolvedTheme === 'dark' ? '#ccc' : '#333' } },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: '#eee' } }, // Horizontal grid lines
+      splitLine: { show: true, lineStyle: { color: resolvedTheme === 'dark' ? '#444' : '#eee' } }, // Horizontal grid lines
       inverse: false // Genomes sorted alphabetically bottom to top
     },
     legend: {
@@ -440,6 +460,7 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
         type: 'scatter',
         data: plotData.map(p => p.value),
         symbolSize: (val: any[]) => val[5],
+        large: true, // Optimize for large datasets
         itemStyle: {
             color: (params: any) => {
                 const isRef = params.value[4];
@@ -666,7 +687,7 @@ const SsrGeneGenomeDotPlot: React.FC<SsrGeneGenomeDotPlotProps> = ({ queryResult
                    style={{ height: `${chartHeight}px`, minWidth: `${chartWidth}px`, width: '100%' }}
                    notMerge={true}
                    lazyUpdate={true}
-                   theme={"light"}
+                   theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
                  />
             )}
          </div>

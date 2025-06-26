@@ -8,6 +8,7 @@ import { Info, Maximize2, AlertCircle, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as echarts from 'echarts/core';
 import { HeatmapChart } from 'echarts/charts';
+import { useTheme } from "@/components/theme-provider";
 import { GridComponent, TooltipComponent, VisualMapComponent, ToolboxComponent, DataZoomComponent } from 'echarts/components';
 import type { EChartsCoreOption } from 'echarts/core';
 import {
@@ -57,6 +58,7 @@ interface MotifDistributionHeatmapProps {
 
 const MotifDistributionHeatmap: React.FC<MotifDistributionHeatmapProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // --- State for Filters ---
   // Keep initial state empty
@@ -208,7 +210,7 @@ const MotifDistributionHeatmap: React.FC<MotifDistributionHeatmapProps> = ({ que
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         // Reset to original height or auto
          const stats = processed?.stats;
@@ -538,6 +540,7 @@ const MotifDistributionHeatmap: React.FC<MotifDistributionHeatmapProps> = ({ que
                  style={{ height: `${chartHeight}px`, minWidth: '600px', width: '100%' }}
                  notMerge
                  lazyUpdate
+                 theme={resolvedTheme}
                />
            )}
          </div>

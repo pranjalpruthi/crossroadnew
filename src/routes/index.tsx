@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, GitCompare, Database, BarChart3, Microscope, Dna, Github } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ArrowRight, BookOpen, GitCompare, Database, BarChart3, Microscope, Dna, Github, Terminal } from 'lucide-react';
+import { FlipButton } from '@/components/animate-ui/buttons/flip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BioinformaticsPipeline from '@/components/BioinformaticsPipeline';
@@ -9,11 +10,12 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { ApiStatusBadge, DevStatusBadge } from "@/components/ApiStatusBadge";
 import {
   AnimatedSpan,
-  Terminal,
   TypingAnimation,
 } from "@/components/magicui/terminal";
+import { Terminal as TerminalWindow } from "@/components/magicui/terminal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import "@/styles/hero-animation.css";
 
 // Define the route for the landing page
 export const Route = createFileRoute('/')({
@@ -48,7 +50,7 @@ function FeatureCard({
 // Terminal Demo Component for Drawer
 function DrawerTerminalDemo() {
   return (
-    <Terminal className="w-full h-[500px] overflow-hidden">
+    <TerminalWindow className="w-full h-[500px] overflow-hidden">
       <TypingAnimation>~/Documents/GitHub/crossroad main*</TypingAnimation>
       <TypingAnimation delay={800}>crossroad_dev ❯ crossroad</TypingAnimation>
 
@@ -91,7 +93,7 @@ function DrawerTerminalDemo() {
       <TypingAnimation delay={6500} className="text-muted-foreground">
         Run 'crossroad --help' to see available commands.
       </TypingAnimation>
-    </Terminal>
+    </TerminalWindow>
   );
 }
 
@@ -100,12 +102,14 @@ function InstallationInstructionsDrawer() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline" size="lg" className="gap-2">
-          <Terminal className="h-5 w-5">
-            <span className="sr-only">Terminal</span>
-          </Terminal>
-          View Installation Guide
-        </Button>
+        <FlipButton
+          from="bottom"
+          frontText={<><Terminal className="h-5 w-5" /> <span className="ml-2">View Installation Guide</span></>}
+          backText="Show Details"
+          className="w-full sm:w-auto"
+          frontClassName="bg-gray-500 hover:bg-gray-600 text-white"
+          backClassName="bg-gray-700"
+        />
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-6xl">
@@ -229,22 +233,25 @@ function LandingPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              <Link to="/analysis" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto font-semibold"
-                >
-                  Start Analysis <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+<Link to="/analysis" className="w-full sm:w-auto">
+                <FlipButton
+                  from="left"
+                  frontText={<>Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></>}
+                  backText="Start Exploring"
+                  className="w-full sm:w-auto"
+                  frontClassName="bg-blue-500 hover:bg-blue-600 text-white"
+                  backClassName="bg-blue-700"
+                />
               </Link>
               <Link to="/about" className="w-full sm:w-auto">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="w-full sm:w-auto font-semibold"
-                >
-                  <BookOpen className="mr-2 h-5 w-5" /> Read Documentation
-                </Button>
+                <FlipButton
+                  from="right"
+                  frontText={<><BookOpen className="mr-2 h-5 w-5" /> Read Documentation</>}
+                  backText="Learn More"
+                  className="w-full sm:w-auto"
+                  frontClassName="bg-green-500 hover:bg-green-600 text-white"
+                  backClassName="bg-green-700"
+                />
               </Link>
             </motion.div>
           </motion.div>
@@ -255,17 +262,10 @@ function LandingPage() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="hidden lg:block relative"
           >
-            <div className="w-full h-[400px] rounded-lg bg-muted/30 border backdrop-blur-sm relative overflow-hidden">
+            <div className="w-full h-[400px] rounded-lg border backdrop-blur-sm relative overflow-hidden hero-animation-container">
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <img src="/logo512.png" alt="croSSRoad Logo" className="h-32 w-32 object-contain" />
-                <p className="text-xl font-medium text-foreground/70 mt-4">SSR Analysis Pipeline</p>
+                <img src="/logo512.png" alt="croSSRoad Logo" className="h-72 w-72 object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.2)]" />
               </div>
-              
-              {/* DNA decorative elements */}
-              <div className="absolute top-[20%] left-[15%] w-2 h-2 rounded-full bg-primary/20" />
-              <div className="absolute top-[30%] right-[25%] w-3 h-3 rounded-full bg-primary/30" />
-              <div className="absolute bottom-[25%] left-[35%] w-4 h-4 rounded-full bg-primary/20" />
-              <div className="absolute bottom-[15%] right-[20%] w-2 h-2 rounded-full bg-primary/30" />
             </div>
           </motion.div>
         </div>
@@ -353,12 +353,19 @@ function LandingPage() {
               </p>
               
               <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row gap-3">
-                <Link to="/analysis" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto font-semibold">
-                    Go to Analysis <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
+<Link to="/analysis" className="w-full sm:w-auto">
+                <FlipButton
+                  from="top"
+                  frontText={<>Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></>}
+                  backText="Let's Go!"
+                  className="w-full sm:w-auto"
+                  frontClassName="bg-purple-500 hover:bg-purple-600 text-white"
+                  backClassName="bg-purple-700"
+                />
+              </Link>
+              <div className="w-full sm:w-auto">
                 <InstallationInstructionsDrawer />
+              </div>
               </div>
             </motion.div>
 

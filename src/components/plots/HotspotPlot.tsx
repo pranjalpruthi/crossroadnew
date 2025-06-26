@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Info, Flame, Maximize2 } from 'lucide-react'; // Added Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTheme } from "@/components/theme-provider";
 import { Badge } from '@/components/ui/badge';
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart } from 'echarts/charts'; // Using BarChart
@@ -59,6 +60,7 @@ interface HotspotPlotProps {
 
 const HotspotPlot: React.FC<HotspotPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -165,7 +167,7 @@ const HotspotPlot: React.FC<HotspotPlotProps> = ({ queryResult }) => {
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
         // Consider resizing chart
         // const chartInstance = echarts.getInstanceByDom(chartDiv);
         // chartInstance?.resize();
@@ -424,7 +426,7 @@ const HotspotPlot: React.FC<HotspotPlotProps> = ({ queryResult }) => {
             style={{ height: `${chartHeight}px`, width: '100%' }} // Dynamic height
             notMerge={true}
             lazyUpdate={true}
-            theme={"light"}
+            theme={resolvedTheme}
           />
         </div>
       </CardContent>

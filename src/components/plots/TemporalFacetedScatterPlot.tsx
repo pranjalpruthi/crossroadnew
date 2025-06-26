@@ -6,6 +6,7 @@ import { AlertCircle, Info, Clock, Maximize2 } from 'lucide-react'; // Added Max
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from "@/components/theme-provider";
 import * as echarts from 'echarts/core';
 import { ScatterChart as EScatterChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, ToolboxComponent, DataZoomComponent } from 'echarts/components';
@@ -73,6 +74,7 @@ interface TemporalFacetedScatterPlotProps {
 
 const TemporalFacetedScatterPlot: React.FC<TemporalFacetedScatterPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -162,7 +164,7 @@ const TemporalFacetedScatterPlot: React.FC<TemporalFacetedScatterPlotProps> = ({
          containerDiv.style.height = '100vh';
          containerDiv.style.overflowY = 'auto'; // Allow scrolling in fullscreen
          containerDiv.style.padding = '20px';
-         containerDiv.style.background = '#ffffff';
+         containerDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
          // Resize all chart instances within the container
          containerDiv.querySelectorAll('.echarts-for-react').forEach(chartElement => {
              const chartInstance = echarts.getInstanceByDom(chartElement as HTMLElement);
@@ -446,7 +448,7 @@ const TemporalFacetedScatterPlot: React.FC<TemporalFacetedScatterPlotProps> = ({
                       style={{ height: '350px', width: '100%' }}
                       notMerge={true}
                       lazyUpdate={true}
-                      theme={"light"}
+                      theme={resolvedTheme}
                   />
               </div>
           ))}

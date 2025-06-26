@@ -7,6 +7,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info, Maximize2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme-provider";
 import {
   Popover,
   PopoverTrigger,
@@ -33,6 +34,7 @@ interface UpsetPlotProps {
 
 const UpsetPlot: React.FC<UpsetPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   if (isLoading) {
     return (
@@ -118,7 +120,7 @@ const UpsetPlot: React.FC<UpsetPlotProps> = ({ queryResult }) => {
         // adjust chart container styles
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         chartDiv.style.height = 'auto';
         chartDiv.style.padding = '0';
@@ -208,7 +210,7 @@ const UpsetPlot: React.FC<UpsetPlotProps> = ({ queryResult }) => {
       </CardHeader>
       <CardContent>
         <div id="upset-chart" className="relative">
-          <VegaLite spec={spec} />
+          <VegaLite spec={spec} theme={resolvedTheme === 'dark' ? 'dark' : undefined} />
         </div>
       </CardContent>
     </Card>

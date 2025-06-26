@@ -6,6 +6,7 @@ import { AlertCircle, Info, BarChartBig, Maximize2 } from 'lucide-react'; // Add
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from "@/components/theme-provider";
 import * as echarts from 'echarts/core';
 import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, ToolboxComponent, DataZoomComponent } from 'echarts/components';
@@ -57,6 +58,7 @@ interface SsrGeneIntersectionPlotProps {
 
 const SsrGeneIntersectionPlot: React.FC<SsrGeneIntersectionPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -156,7 +158,7 @@ const SsrGeneIntersectionPlot: React.FC<SsrGeneIntersectionPlotProps> = ({ query
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         chartDiv.style.height = '600px'; // Reset to original fixed height
         chartDiv.style.padding = '0';
@@ -378,7 +380,7 @@ const SsrGeneIntersectionPlot: React.FC<SsrGeneIntersectionPlotProps> = ({ query
             style={{ height: '600px', width: '100%' }} // Keep fixed height
             notMerge={true}
             lazyUpdate={true}
-            theme={"light"}
+            theme={resolvedTheme}
           />
         </div>
         {/* Removed the grid and stats column div */}

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import * as echarts from 'echarts/core';
 import { ScatterChart as EScatterChart, LineChart } from 'echarts/charts'; // Import necessary chart types
 import { GridComponent, TooltipComponent, LegendComponent, VisualMapComponent, ToolboxComponent, DataZoomComponent } from 'echarts/components'; // Import necessary components
+import { useTheme } from "@/components/theme-provider";
 // Import Popover components
 import {
   Popover,
@@ -69,6 +70,7 @@ interface SsrGcDistributionPlotProps {
 
 const SsrGcDistributionPlot: React.FC<SsrGcDistributionPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -159,7 +161,7 @@ const SsrGcDistributionPlot: React.FC<SsrGcDistributionPlotProps> = ({ queryResu
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff'; // Optional: set background for fullscreen
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff'; // Optional: set background for fullscreen
       } else if (chartDiv) {
         // Reset styles when exiting fullscreen
         chartDiv.style.height = 'auto'; // Or back to original style.height if needed
@@ -405,7 +407,7 @@ const SsrGcDistributionPlot: React.FC<SsrGcDistributionPlotProps> = ({ queryResu
              style={{ height: '600px', width: '100%' }} // Adjusted height
              notMerge={true}
              lazyUpdate={true}
-             theme={"light"}
+             theme={resolvedTheme}
            />
          </div>
       </CardContent>

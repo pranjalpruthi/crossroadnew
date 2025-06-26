@@ -4,6 +4,7 @@ import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Info, PieChart } from 'lucide-react'; // Using PieChart icon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTheme } from "@/components/theme-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
 // Import Popover components
@@ -54,6 +55,7 @@ interface MotifConservationPlotProps {
 
 const MotifConservationPlot: React.FC<MotifConservationPlotProps> = ({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -334,7 +336,7 @@ const MotifConservationPlot: React.FC<MotifConservationPlotProps> = ({ queryResu
            style={{ height: '550px', width: '100%' }} // Adjusted height
            notMerge={true}
            lazyUpdate={true}
-           theme={"light"}
+           theme={resolvedTheme}
          />
       </CardContent>
     </Card>

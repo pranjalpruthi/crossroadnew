@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { ArrowRight, Database, LineChart, Cpu, Code, Dna, Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'

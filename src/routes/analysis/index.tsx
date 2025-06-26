@@ -17,6 +17,8 @@ import {
 } from '@tanstack/react-table';
 
 // --- Shadcn UI Components ---
+import { FlipButton } from "@/components/animate-ui/buttons/flip";
+import { LiquidButton } from "@/components/animate-ui/buttons/liquid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Added for filter input
 import { Label } from "@/components/ui/label";
@@ -47,7 +49,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsContents,
+  TabsList,
+  TabsTrigger,
+} from "@/components/animate-ui/radix/tabs";
+import { CopyButton } from "@/components/animate-ui/buttons/copy";
+import { FastaFileUpload } from "@/components/ui/FastaFileUpload";
 import { FileUpload } from "@/components/ui/file-upload";
 import {
   Popover,
@@ -56,11 +66,13 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GuideDrawer } from "@/components/GuideDrawer"; // Import the new component
+import { ExampleFilesDrawer } from "@/components/ExampleFilesDrawer";
 
 // --- Icons and Animation ---
+import { Counter } from '@/components/animate-ui/components/counter';
 import {
-    AlertCircle, Download, TableIcon, DatabaseZap, Info, Search,
-   AreaChart, GitBranch,
+    AlertCircle, Download, Info, Search,
+    GitBranch,
   ChevronUpIcon, ChevronDownIcon,
   ChevronFirstIcon,
   ChevronLastIcon,
@@ -75,7 +87,8 @@ import {
   Sparkles, // Added Sparkles icon
   Database, // Added Database icon
 } from "lucide-react";
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
+import { WritingText } from "@/components/animate-ui/text/writing"; // Import WritingText
 import { Toaster, toast } from 'sonner';
 import { cn } from "@/lib/utils"; // Import cn utility
 import {
@@ -224,18 +237,18 @@ const fileSchema = (required: boolean) => {
 
 // Schema for PERF parameters with defaults for parsing
 const perfSchema = z.object({
-  mono: z.number().int().min(1).default(12),
-  di: z.number().int().min(1).default(4),
-  tri: z.number().int().min(1).default(3),
+  mono: z.number().int().min(1).default(10),
+  di: z.number().int().min(1).default(6),
+  tri: z.number().int().min(1).default(4),
   tetra: z.number().int().min(1).default(3),
-  penta: z.number().int().min(1).default(3),
+  penta: z.number().int().min(1).default(2),
   hexa: z.number().int().min(1).default(2),
-  minLen: z.number().int().min(0).default(156000),
+  minLen: z.number().int().min(0).default(1000),
   maxLen: z.number().int().min(0).default(10000000),
-  unfair: z.number().int().min(0).default(0),
+  max_n_bases: z.number().int().min(0).default(0),
   thread: z.number().int().min(1).default(50),
   min_repeat_count: z.number().int().min(1).default(1),
-  min_genome_count: z.number().int().min(1).default(5),
+  min_genome_count: z.number().int().min(1).default(2),
 });
 
 // Main form schema
@@ -254,6 +267,16 @@ type FormValues = z.infer<typeof formSchema>;
 // Type Helper for Perf Params
 type PerfParams = z.infer<typeof perfSchema>;
 
+// Type for a successful job submission response
+type JobSubmissionSuccess = {
+  job_id: string;
+  status: string;
+  message: string;
+  status_url: string;
+  results_base_url: string;
+  download_all_url: string;
+};
+
 // Explicit type for default values structure
 type FormDefaultValues = {
   fasta_file: undefined; // FileList defaults are typically undefined
@@ -264,6 +287,21 @@ type FormDefaultValues = {
   perf_params: PerfParams; // Use the existing PerfParams type
 };
 
+// Descriptions for PERF parameters, used in Popovers
+const perfParamDescriptions: Record<keyof PerfParams, string> = {
+  mono: "Mononucleotide repeat threshold. Defines the minimum number of consecutive identical bases to be considered a mononucleotide SSR. Default: 10.",
+  di: "Dinucleotide repeat threshold. Defines the minimum number of repeating two-base units (e.g., ATATAT) to be considered a dinucleotide SSR. Default: 6.",
+  tri: "Trinucleotide repeat threshold. Defines the minimum number of repeating three-base units (e.g., AGCAGCAGC) to be considered a trinucleotide SSR. Default: 4.",
+  tetra: "Tetranucleotide repeat threshold. Defines the minimum number of repeating four-base units to be considered a tetranucleotide SSR. Default: 3.",
+  penta: "Pentanucleotide repeat threshold. Defines the minimum number of repeating five-base units to be considered a pentanucleotide SSR. Default: 2.",
+  hexa: "Hexanucleotide repeat threshold. Defines the minimum number of repeating six-base units to be considered a hexanucleotide SSR. Default: 2.",
+  minLen: "Minimum genome length for filtering. Genomes shorter than this value will be excluded from analysis. Default: 1000 bp.",
+  maxLen: "Maximum genome length for filtering. Genomes longer than this value will be excluded from analysis. Default: 10,000,000 bp.",
+  max_n_bases: "Maximum number of 'N' (unknown) bases allowed per genome. Genomes with more 'N's than this value will be excluded. Default: 0.",
+  thread: "Number of threads for parallel processing. Specifies how many CPU cores can be utilized during the analysis. Default: 50.",
+  min_repeat_count: "Minimum repeat count for hotspot filtering. SSRs found in fewer genomes than this threshold will be excluded from hotspot analysis. Default: 1.",
+  min_genome_count: "Minimum genome count for hotspot filtering. SSRs must be present in at least this many genomes to be considered for hotspot analysis. Default: 2.",
+};
 
 // --- Helper Components ---
 
@@ -602,22 +640,23 @@ function HomePage() {
   const [jobError, setJobError] = useState<string | null>(null);
   const [submittedReferenceId, setSubmittedReferenceId] = useState<string | null>(null); // State for submitted ref ID
   const [previousJobIdInput, setPreviousJobIdInput] = useState<string>(''); // State for previous job ID input
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const queryClient = useQueryClient(); // Get query client instance
 
   // Explicitly define default performance parameters
   const defaultPerfParams: PerfParams = {
-    mono: 12,
-    di: 4,
-    tri: 3,
+    mono: 10,
+    di: 6,
+    tri: 4,
     tetra: 3,
-    penta: 3,
+    penta: 2,
     hexa: 2,
-    minLen: 156000,
+    minLen: 1000,
     maxLen: 10000000,
-    unfair: 0,
+    max_n_bases: 0,
     thread: 50,
     min_repeat_count: 1,
-    min_genome_count: 4,
+    min_genome_count: 2,
   };
 
   // --- Form Initialization ---
@@ -658,28 +697,59 @@ function HomePage() {
     if (value.gene_bed?.[0]) formData.append('gene_bed', value.gene_bed[0], value.gene_bed[0].name);
     if (value.reference_id) formData.append('reference_id', value.reference_id);
     formData.append('flanks', String(value.flanks ?? false));
-    formData.append('perf_params', JSON.stringify(value.perf_params));
+    const { max_n_bases, ...restPerfParams } = value.perf_params;
+    const backendPerfParams = { ...restPerfParams, unfair: max_n_bases };
+    formData.append('perf_params', JSON.stringify(backendPerfParams));
     return formData;
   };
 
   // --- TanStack Query: Job Submission Mutation ---
   const submitMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch(`${API_BASE_URL}/analyze_ssr/`, { method: 'POST', body: formData });
-      if (!response.ok) {
-        let errorDetail = `HTTP error ${response.status}`;
-        try { const errorJson = await response.json(); errorDetail = errorJson.detail || JSON.stringify(errorJson); } catch (e) {}
-        throw new Error(`Server error: ${response.status} - ${errorDetail}`);
-      }
-      if (response.status !== 202) throw new Error(`Expected status 202, got ${response.status}`);
-      return response.json();
+    mutationFn: (formData: FormData): Promise<JobSubmissionSuccess> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_BASE_URL}/analyze_ssr/`, true);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            setUploadProgress(percentComplete);
+          }
+        };
+
+        xhr.onload = () => {
+          setUploadProgress(null); // Clear progress on completion
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (xhr.status !== 202) {
+              reject(new Error(`Expected status 202, got ${xhr.status}`));
+            } else {
+              resolve(JSON.parse(xhr.responseText) as JobSubmissionSuccess);
+            }
+          } else {
+            let errorDetail = `HTTP error ${xhr.status}`;
+            try {
+              const errorJson = JSON.parse(xhr.responseText);
+              errorDetail = errorJson.detail || JSON.stringify(errorJson);
+            } catch (e) {}
+            reject(new Error(`Server error: ${xhr.status} - ${errorDetail}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          setUploadProgress(null); // Clear progress on error
+          reject(new Error('Network request failed'));
+        };
+
+        xhr.send(formData);
+      });
     },
     onMutate: () => {
        toast.loading("Submitting analysis job...", { id: 'job-submission' });
        setJobId(null); setJobUrls(null); setJobStatus(null); setJobMessage(null);
        setJobProgress(null); setJobError(null); setSubmittedReferenceId(null); // Clear submitted ref ID on new submission
+       setUploadProgress(0);
      },
-     onSuccess: (data) => { // Remove unused variables parameter
+     onSuccess: (data: JobSubmissionSuccess) => { // Remove unused variables parameter
        // Explicitly use only the 'data' parameter from onSuccess for job details
       const newJobId = data.job_id;
       const initialStatus = data.status;
@@ -719,6 +789,7 @@ function HomePage() {
        setSubmittedReferenceId(null); // Clear submitted ref ID on error
      },
    });
+
 
   // --- TanStack Query: Job Status Polling ---
   const { data: statusData, isError: isStatusError, error: statusFetchError } = useQuery({
@@ -1149,20 +1220,40 @@ function HomePage() {
 
    // --- Render ---
    return (
-     <div className="px-4 md:px-6 py-12 md:py-16 lg:py-20">
+     <div className="px-4 md:px-6 pt-12 md:pt-16 lg:pt-20 pb-8 md:pb-10 lg:pb-12"> {/* Increased top padding, kept bottom padding */}
         <Toaster richColors position="top-center" />
 
         {/* --- Header --- */}
-       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center mb-12">
-         <h1 className="font-bold tracking-tighter text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
-           croSSRroad <span className="block bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent font-semibold">SSR Analysis Pipeline</span>
-         </h1>
-         <p className="mx-auto max-w-[700px] text-muted-foreground text-sm md:text-base lg:text-lg mt-4">
-           Analyze Simple Sequence Repeats (SSRs), compare across genomes, identify hotspots, and trace evolutionary patterns.
-         </p>
-       </motion.div>
+        {/* Removed the "Current File" heading */}
+       <motion.div
+         initial={{ opacity: 0, y: -20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ duration: 0.5 }}
+         className="mb-12 md:flex md:items-start md:justify-between" // Changed to items-start for better alignment with multi-line left content
+       >
+        <div className="md:w-2/5 text-center md:text-left mb-6 md:mb-0"> {/* Left part - made smaller */}
+          <h1 className="font-bold tracking-tighter text-3xl sm:text-4xl md:text-4xl lg:text-5xl"> {/* Adjusted font size slightly */}
+            cro<span className="bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent">SSR</span>road
+          </h1>
+<h2 className="text-xl text-primary sm:text-2xl md:text-2xl lg:text-3xl font-semibold mt-1">
+  <WritingText
+    text="SSR Analysis Pipeline"
+    spacing={9}
+    transition={{ duration: 1, delay: 0.1 }}
+  />
+</h2>
+        </div>
+        <div className="md:w-3/5 text-center md:text-left md:pl-8"> {/* Right part - adjusted width and padding */}
+          <WritingText
+           text="Analyze Simple Sequence Repeats (SSRs), compare across genomes, identify hotspots, and trace evolutionary patterns."
+           className="max-w-[700px] text-foreground font-bold text-sm md:text-base lg:text-lg leading-relaxed"
+           transition={{ duration: 1, delay: 0.1 }} // Adjust transition as needed
+           spacing={4} // Adjust spacing between words
+         />
+        </div>
+      </motion.div>
 
-       {/* --- Form & Guide Section (Two Columns) --- */}
+        {/* --- Form & Guide Section (Two Columns) --- */}
        <motion.div
          initial={{ opacity: 0, y: 20 }}
          animate={{ opacity: 1, y: 0 }}
@@ -1174,54 +1265,76 @@ function HomePage() {
             <h2 className="text-2xl font-semibold tracking-tight border-b pb-2">New Analysis</h2>
 
            {/* File Inputs Card */}
-            <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
-              <CardHeader>
-                 <CardTitle className="text-lg font-medium flex items-center"><FileIcon className="mr-2 h-5 w-5" /> Upload Your Data</CardTitle>
-                 <CardDescription>Provide the required FASTA file and optional metadata.</CardDescription>
+            <Card className="backdrop-blur-md bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-green-900/30 dark:via-gray-950 dark:to-green-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+              <CardHeader className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg font-medium flex items-center">
+                    <FileIcon className="mr-2 h-5 w-5" /> Upload Your Data
+                  </CardTitle>
+                  <CardDescription>
+                    Provide the required FASTA file and optional metadata.
+                  </CardDescription>
+                </div>
+                <ExampleFilesDrawer
+                  onLoadExample={handleLoadExample}
+                  onLoadDemo={handleLoadDemoJob}
+                >
+                  <FlipButton
+                    frontText="How to Format?"
+                    backText="See Examples"
+                    className="w-full sm:w-auto"
+                  />
+                </ExampleFilesDrawer>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 py-3"> {/* Reduced vertical padding and space between items */}
                  {/* FASTA File */}
                  <form.Field name="fasta_file">{(field) => (
-                   <div className="space-y-1.5">
+                   <div className="space-y-1"> {/* Reduced space */}
                      <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">FASTA File <span className="text-red-500">*</span></Label>
-                     {/* Removed extra div wrapper */}
-                     <FileUpload
+                     <FastaFileUpload
                         onChange={(files) => {
-                          if (files.length > 0) {
+                          if (files) {
                             const dataTransfer = new DataTransfer();
-                            files.forEach(file => dataTransfer.items.add(file));
+                            files.forEach(f => dataTransfer.items.add(f));
                             field.handleChange(dataTransfer.files);
+                          } else {
+                            field.handleChange(undefined);
                           }
+                        }}
+                        onGenomeCountChange={(count: number) => {
+                          console.log("Final genome count:", count);
                         }}
                         accept=".fa,.fasta"
                         required={true}
-                        title="FASTA File (.fa, .fasta)"
-                        description="Required genomic sequences"
+                        title="Upload FASTA File"
+                        description="Provide your genomic sequences"
                         fileTypeHint="fasta"
+                        uploadProgress={uploadProgress}
                       />
                      <FieldInfo field={field} />
                    </div>
                  )}</form.Field>
 
                  {/* Optional Files in a Grid */}
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"> {/* Reduced gap and padding-top */}
                    {/* Categories File */}
                    <form.Field name="categories_file">{(field) => (
-                     <div className="space-y-1.5">
+                     <div className="space-y-1"> {/* Reduced space */}
                        <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Categories File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
                        <FileUpload
                          onChange={(files) => {
-                           if (files.length > 0) {
-                             const dataTransfer = new DataTransfer();
+                           const dataTransfer = new DataTransfer();
+                           if (files && files.length > 0) {
                              files.forEach(file => dataTransfer.items.add(file));
-                             field.handleChange(dataTransfer.files);
                            }
+                           field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
                          }}
                          accept={ACCEPTED_TSV_EXTENSIONS.join(',')}
                          required={false}
                          title="Categories File (.tsv)"
                          description="Optional metadata"
                          fileTypeHint="tsv"
+                         uploadProgress={uploadProgress}
                        />
                        <FieldInfo field={field} />
                      </div>
@@ -1229,21 +1342,22 @@ function HomePage() {
 
                    {/* Gene BED File */}
                    <form.Field name="gene_bed">{(field) => (
-                     <div className="space-y-1.5">
+                     <div className="space-y-1"> {/* Reduced space */}
                        <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Gene BED File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
                        <FileUpload
                          onChange={(files) => {
-                           if (files.length > 0) {
-                             const dataTransfer = new DataTransfer();
+                           const dataTransfer = new DataTransfer();
+                           if (files && files.length > 0) {
                              files.forEach(file => dataTransfer.items.add(file));
-                             field.handleChange(dataTransfer.files);
                            }
+                           field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
                          }}
                          accept={ACCEPTED_BED_EXTENSIONS.join(',')}
                          required={false}
                          title="Gene BED File (.bed)"
                          description="Optional annotations"
                          fileTypeHint="bed"
+                         uploadProgress={uploadProgress}
                        />
                        <FieldInfo field={field} />
                      </div>
@@ -1253,102 +1367,110 @@ function HomePage() {
             </Card>
 
            {/* Other Options Card */}
-           <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
-             <CardHeader>
-               <CardTitle className="text-lg font-medium flex items-center"><Settings2 className="mr-2 h-5 w-5" /> Analysis Configuration</CardTitle>
-               <CardDescription>Fine-tune analysis parameters.</CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {/* Reference ID */}
-               <form.Field name="reference_id">{(field) => (
-                 <div className="space-y-1.5">
-                   <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Reference ID <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                   <Input
-                     id={field.name}
-                     name={field.name}
-                     value={field.state.value ?? ''}
-                     onBlur={field.handleBlur}
-                     onChange={(e) => field.handleChange(e.target.value)}
-                     placeholder="e.g., NC_063383.1 (for reference-specific plots)"
-                     className="border-gray-200/80 dark:border-gray-800/70 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md h-9 text-sm"
-                   />
-                   <FieldInfo field={field} />
-                 </div>
-               )}</form.Field>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+              <Card className="backdrop-blur-md bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-purple-900/30 dark:via-gray-950 dark:to-purple-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium flex items-center"><Settings2 className="mr-2 h-5 w-5" /> Analysis Configuration</CardTitle>
+                  <CardDescription>Fine-tune analysis parameters for SSR identification and filtering.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Reference ID */}
+                    <form.Field name="reference_id">{(field) => (
+                      <div className="space-y-1.5">
+                        <Label htmlFor={field.name} className="text-sm font-medium text-gray-700 dark:text-gray-300">Reference ID <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                        <p className="text-xs text-muted-foreground">ID from your FASTA file for reference-specific plots (e.g., gene distribution).</p>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="e.g., NC_063383.1"
+                        />
+                        <FieldInfo field={field} />
+                      </div>
+                    )}</form.Field>
 
-               {/* Flanks Toggle */}
-               <form.Field name="flanks">{(field) => (
-                 <div className="flex items-center justify-between p-3 border border-gray-200/80 dark:border-gray-800/70 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all hover:border-primary/40">
-                   <div className="space-y-0.5">
-                     <Label htmlFor={field.name} className="text-sm font-medium text-gray-800 dark:text-gray-200">Include Flanking Regions</Label>
-                     <p className="text-xs text-muted-foreground">Analyze regions surrounding SSRs</p>
-                   </div>
-                   <Switch
-                     id={field.name}
-                     aria-label="Toggle flanking regions"
-                     checked={field.state.value}
-                     onCheckedChange={(checked: boolean) => field.handleChange(checked)}
-                   />
-                 </div>
-               )}</form.Field>
+                    {/* Flanks Toggle */}
+                    <form.Field name="flanks">{(field) => (
+                      <div className="flex items-center justify-between p-3 border border-gray-200/80 dark:border-gray-800/70 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all hover:border-primary/40 h-full">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={field.name} className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                            Include Flanking Regions
+                            <Badge variant="outline" className="ml-2">Beta</Badge>
+                          </Label>
+                          <p className="text-xs text-muted-foreground">Analyze regions surrounding SSRs for conservation. Toggle coming soon.</p>
+                        </div>
+                        <Switch
+                          id={field.name}
+                          aria-label="Toggle flanking regions"
+                          checked={field.state.value}
+                          onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                          disabled
+                        />
+                      </div>
+                    )}</form.Field>
+                  </div>
 
-               {/* PERF Parameters Accordion */}
-               <Accordion type="single" collapsible className="w-full">
-                 <AccordionItem value="perf-params" className="border border-gray-200/80 dark:border-gray-800/70 rounded-lg overflow-hidden bg-gray-50/30 dark:bg-gray-900/30">
-                   <AccordionTrigger className="px-4 py-2.5 text-sm font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
-                      Advanced PERF Parameters (Optional)
-                   </AccordionTrigger>
-                   <AccordionContent className="px-4 pt-3 pb-4 border-t border-gray-200/80 dark:border-gray-800/70 bg-white/50 dark:bg-gray-950/50">
-                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
-                       {Object.keys(defaultPerfParams).map((key) => (
-                         <form.Field key={key} name={`perf_params.${key}` as keyof FormValues}>
-                           {(field) => (
-                             <div className="space-y-1">
-                               <Label htmlFor={field.name} className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">{key.replace(/_/g, ' ')}</Label>
-                               <Input
-                                 id={field.name}
-                                 name={field.name}
-                                 type="number"
-                                 value={String(field.state.value ?? '')}
-                                 onBlur={field.handleBlur}
-                                 onChange={(e) => field.handleChange(e.target.value)}
-                                 className="h-8 text-sm border-gray-200/80 dark:border-gray-800/70 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md"
-                               />
-                               <FieldInfo field={field} />
-                             </div>
-                           )}
-                         </form.Field>
-                       ))}
-                     </div>
-                   </AccordionContent>
-                 </AccordionItem>
-               </Accordion>
-             </CardContent>
-           </Card>
-
-           {/* Submit Button */}
-           <div className="flex justify-end pt-2">
-             <form.Subscribe selector={(state) => [state.canSubmit, state.isValid, state.isValidating]}>
-               {([canSubmit, isValid, isValidating]) => (
-                 <Button
-                   type="submit"
-                   disabled={!isValid || !canSubmit || submitMutation.isPending || isValidating || (!!jobId && jobStatus !== 'failed')}
-                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md rounded-md px-6 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out transform hover:scale-105"
-                   size="lg"
-                 >
-                   {submitMutation.isPending || isValidating ? (
-                     <>
-                       <Loader text="Submitting analysis job..." className="scale-75" />
-                     </>
-                   ) : (
-                     <>
-                       Run Analysis <Sparkles className="ml-2 h-4 w-4" />
-                     </>
-                   )}
-                 </Button>
-               )}
-             </form.Subscribe>
-           </div>
+                  
+                  {/* PERF Parameters Accordion */}
+                  <Accordion type="single" collapsible className="w-full" defaultValue="perf-params">
+                    <AccordionItem value="perf-params" className="border border-gray-200/80 dark:border-gray-800/70 rounded-lg overflow-hidden bg-gray-50/30 dark:bg-gray-900/30">
+                      <AccordionTrigger className="px-4 py-2.5 text-sm font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
+                        <div className="flex items-center gap-2">
+                          <GitBranch className="h-4 w-4" />
+                          <span>Custom Advanced Parameters (PERF)</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pt-4 pb-4 border-t border-gray-200/80 dark:border-gray-800/70 bg-white/50 dark:bg-gray-950/50">
+                        <p className="text-xs text-muted-foreground mb-4">
+                          Set the minimum repeat counts for different SSR motif types (mono-, di-, tri-nucleotides, etc.). These values determine which sequences are identified as SSRs.
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
+                          {(Object.keys(defaultPerfParams) as Array<keyof PerfParams>).map((key) => (
+                            <form.Field key={key} name={`perf_params.${key}`}>
+                              {(field) => (
+                                <div className="space-y-2">
+                                  <div className="flex items-center space-x-1.5">
+                                    <Label htmlFor={field.name} className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
+                                      {key.replace(/_/g, ' ')}
+                                    </Label>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-primary rounded-full">
+                                          <Info className="h-3 w-3" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent
+                                        className="w-64 bg-blue-50 dark:bg-blue-800 border-blue-200 dark:border-blue-700 p-3 shadow-lg rounded-md"
+                                        side="top"
+                                        align="center"
+                                      >
+                                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-200">
+                                          {perfParamDescriptions[key as keyof PerfParams] || "No description available."}
+                                        </p>
+                                      </PopoverContent>
+                                    </Popover>
+                                  </div>
+                                  <Counter
+                                    number={Number(field.state.value) || 0}
+                                    setNumber={(num) => field.handleChange(num)}
+                                    buttonProps={{ className: 'h-7 w-7 text-lg' }}
+                                    slidingNumberProps={{ className: 'text-base font-medium' }}
+                                  />
+                                  <FieldInfo field={field} />
+                                </div>
+                              )}
+                            </form.Field>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </motion.div>
          </form>
 
          {/* --- Right Column: Guide & Load Job --- */}
@@ -1363,7 +1485,7 @@ function HomePage() {
                  <p>2. Optionally, provide <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.tsv</code> categories or <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.bed</code> gene annotations.</p>
                  <p>3. Set a Reference ID if you need reference-specific visualizations.</p>
                  <p>4. Adjust advanced parameters if needed, or use the defaults.</p>
-                 <p>5. Click "Run Analysis"!</p>
+                 <p>5. Click "Submit Job"!</p>
                </CardContent>
                <CardFooter>
                  {/* Tutorial link */}
@@ -1375,8 +1497,54 @@ function HomePage() {
                </CardFooter>
             </Card>
 
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isValid, state.isValidating]}>
+              {([canSubmit, isValid, isValidating]) => {
+                const buttonText = () => {
+                  if (submitMutation.isPending || isValidating) return "Submitting...";
+                  if (jobStatus === 'completed') return "Job Completed";
+                  if (jobStatus === 'running') return "Job Running...";
+                  if (jobStatus === 'failed') return "Job Failed, Resubmit?";
+                  return "Submit Job";
+                };
+
+                const showLoader = submitMutation.isPending || isValidating || jobStatus === 'running';
+
+                return (
+                  <div className="space-y-4">
+                    <LiquidButton
+                      onClick={() => form.handleSubmit()}
+                      disabled={!isValid || !canSubmit || submitMutation.isPending || isValidating || (!!jobId && jobStatus !== 'failed')}
+                      className="w-full"
+                      size="lg"
+                      variant="invert"
+                    >
+                      {showLoader ? (
+                        <div className="flex items-center justify-center">
+                          <Loader text={buttonText()} className="scale-50" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          {buttonText()} <Sparkles className="ml-2 h-5 w-5" />
+                        </div>
+                      )}
+                    </LiquidButton>
+
+                    {jobId && (
+                      <div className="text-center bg-muted/50 p-3 rounded-lg">
+                        <Label className="text-xs text-muted-foreground">Last Submitted Job ID</Label>
+                        <div className="flex items-center justify-center gap-2 mt-1">
+                          <code className="font-mono text-sm bg-background px-2 py-1 rounded-md shadow-inner">{jobId}</code>
+                          <CopyButton content={jobId} size="sm" variant="ghost" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
+            </form.Subscribe>
+
            {/* Load Previous Job */}
-            <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+            <Card className="backdrop-blur-md bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900/30 dark:via-gray-950 dark:to-slate-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
                <CardHeader>
                  <CardTitle className="text-lg font-medium flex items-center"><History className="mr-2 h-5 w-5" /> Load Previous Job</CardTitle>
                  <CardDescription>Enter a Job ID to retrieve past results or try a demo.</CardDescription>
@@ -1417,11 +1585,14 @@ function HomePage() {
        {jobId && (
          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mt-16"> {/* Added more top margin */}
            <Card className="border border-gray-200/60 dark:border-gray-800/60 shadow-lg rounded-xl overflow-hidden"> {/* Enhanced card styling */}
-             <CardHeader className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200/60 dark:border-gray-800/60">
-               <CardTitle className="text-xl">Job Status: <span className="font-mono text-lg break-all bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{jobId}</span></CardTitle>
-               <div className="flex items-center space-x-2 pt-1">
-                 <Label>Status:</Label>
+             <CardHeader className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200/60 dark:border-gray-800/60 p-4">
+               <div className="flex items-center justify-between">
+                 <CardTitle className="text-xl">Job Status</CardTitle>
                  <Badge variant={jobStatus === 'completed' ? 'default' : jobStatus === 'failed' ? 'destructive' : 'secondary'}>{jobStatus || 'Initializing...'}</Badge>
+               </div>
+               <div className="flex items-center gap-2 pt-2">
+                 <code className="font-mono text-base break-all bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{jobId}</code>
+                 <CopyButton content={jobId} size="sm" variant="outline" />
                </div>
              </CardHeader>
              <CardContent className="space-y-4">
@@ -1453,7 +1624,7 @@ function HomePage() {
                         </div>
                       )}
 
-                      <Tabs defaultValue="core_data" className="w-full">
+                      <Tabs defaultValue="core_data" className="w-full bg-muted rounded-lg">
                         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
                           <TabsTrigger value="core_data">Core Data & Plots</TabsTrigger>
                           <TabsTrigger value="ssr_gene_intersection">SSR-Gene Intersection</TabsTrigger>
@@ -1461,197 +1632,134 @@ function HomePage() {
                           <TabsTrigger value="hssr_data">HSSR Data & Plots</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="core_data">
+                        <TabsContents className="mx-1 mb-1 -mt-2 rounded-sm h-full bg-background">
+                        <TabsContent value="core_data" className="space-y-4">
                           {isPlotSourceLoading ? <TabContentSkeleton /> : isPlotSourceAvailable && availableTableData['plot_source'] ? (
-                            <Card>
-                              <CardHeader>
-                                <CardTitle className="text-lg flex items-center">
-                                  <TableIcon className="mr-2 h-5 w-5" /> Core Data & Related Plots
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="space-y-8"> {/* Increased spacing between items */}
-                                <Tabs defaultValue="category_country_sankey" className="w-full">
-                                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4">  {/* Updated to 8 columns */}
-                                    <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5">Cat → Country</TabsTrigger>
-                                    <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5">SSR GC Dist.</TabsTrigger>
-                                    <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5">Motif Conserv.</TabsTrigger>
-                                    <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5">SSR Conserv.</TabsTrigger>
-                                    <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5">UpSet Plot</TabsTrigger>
-                                    <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5">Rel. Abundance</TabsTrigger>
-                                    <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5">Rel. Density</TabsTrigger>
-                                    <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5">Motif Heatmap</TabsTrigger>
-                                  </TabsList>
-                                  <TabsContent value="category_country_sankey">
-                                    <CategoryCountrySankeyPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="ssr_gc_distribution">
-                                    <SsrGcDistributionPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="motif_conservation">
-                                    <MotifConservationPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="ssr_conservation">
-                                    <SsrConservationPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="upset_plot">
-                                    <UpsetPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="relative_abundance">
-                                    <RelativeAbundancePlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="relative_density">
-                                    <RelativeDensityPlot queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                  <TabsContent value="motif_distribution_heatmap">
-                                    <MotifDistributionHeatmap queryResult={plotSourceResult} />
-                                  </TabsContent>
-                                </Tabs>
-                                <Separator />
-                                <DataTable
-                                  data={availableTableData['plot_source'].data}
-                                  columns={availableTableData['plot_source'].columns}
-                                  caption="Core analysis data."
-                                  tableName="core_data"
-                                />
-                              </CardContent>
-                            </Card>
+                            <>
+                              <Tabs defaultValue="category_country_sankey" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4">
+                                  <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5">Cat → Country</TabsTrigger>
+                                  <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5">SSR GC Dist.</TabsTrigger>
+                                  <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5">Motif Conserv.</TabsTrigger>
+                                  <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5">SSR Conserv.</TabsTrigger>
+                                  <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5">UpSet Plot</TabsTrigger>
+                                  <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5">Rel. Abundance</TabsTrigger>
+                                  <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5">Rel. Density</TabsTrigger>
+                                  <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5">Motif Heatmap</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="category_country_sankey"><CategoryCountrySankeyPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="ssr_gc_distribution"><SsrGcDistributionPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="motif_conservation"><MotifConservationPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="ssr_conservation"><SsrConservationPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="upset_plot"><UpsetPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="relative_abundance"><RelativeAbundancePlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="relative_density"><RelativeDensityPlot queryResult={plotSourceResult} /></TabsContent>
+                                <TabsContent value="motif_distribution_heatmap"><MotifDistributionHeatmap queryResult={plotSourceResult} /></TabsContent>
+                              </Tabs>
+                              <Separator />
+                              <DataTable
+                                data={availableTableData['plot_source'].data}
+                                columns={availableTableData['plot_source'].columns}
+                                caption="Core analysis data."
+                                tableName="core_data"
+                              />
+                            </>
                           ) : !isAnyDataLoading && (
                             <Alert><Info className="h-4 w-4" /><AlertTitle>No Core Data</AlertTitle><AlertDescription>Core data is not available for this job.</AlertDescription></Alert>
                           )}
                         </TabsContent>
 
-                        <TabsContent value="ssr_gene_intersection">
+                        <TabsContent value="ssr_gene_intersection" className="space-y-4">
                           {isSsrGeneIntersectLoading ? <TabContentSkeleton /> : isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] ? (
-                             <Card>
-                               <CardHeader>
-                                 <CardTitle className="text-lg flex items-center">
-                                   <GitBranch className="mr-2 h-5 w-5" /> SSR-Gene Intersection & Reference Distribution
-                                 </CardTitle>
-                               </CardHeader>
-                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                                   <Tabs defaultValue="ssr_gene_intersect" className="w-full">
-                                     <TabsList className="grid w-full grid-cols-2 mb-4"> {/* Increased bottom margin from 2 to 4 */}
-                                       <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
-                                       <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
-                                     </TabsList>
-                                     <TabsContent value="ssr_gene_intersect">
-                                       <SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} />
-                                     </TabsContent>
-                                     <TabsContent value="ref_ssr_dist">
-                                       {submittedReferenceId ? (
-                                         <ReferenceSsrDistributionPlot
-                                           queryResult={ssrGeneIntersectResult} // Uses the same data source
-                                           referenceId={submittedReferenceId}
-                                         />
-                                       ) : (
-                                         <Alert variant="default">
-                                            <Info className="h-4 w-4" />
-                                            <AlertTitle>Reference SSR Distribution</AlertTitle>
-                                            <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
-                                         </Alert>
-                                       )}
-                                     </TabsContent>
-                                   </Tabs>
-                                   <Separator />
-                                 <DataTable
-                                   data={availableTableData['ssr_gene_intersect'].data}
-                                   columns={availableTableData['ssr_gene_intersect'].columns}
-                                    caption="SSR-Gene intersection data."
-                                   tableName="ssr_gene_intersect"
-                                   />
-                                 </CardContent>
-                               </Card>
-                            ) : !isAnyDataLoading && (
-                              <Alert><Info className="h-4 w-4" /><AlertTitle>No SSR-Gene Intersection Data</AlertTitle><AlertDescription>SSR-Gene Intersection data is not available for this job.</AlertDescription></Alert>
-                            )}
+                            <>
+                              <Tabs defaultValue="ssr_gene_intersect" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 mb-4">
+                                  <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
+                                  <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="ssr_gene_intersect"><SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} /></TabsContent>
+                                <TabsContent value="ref_ssr_dist">
+                                  {submittedReferenceId ? (
+                                    <ReferenceSsrDistributionPlot queryResult={ssrGeneIntersectResult} referenceId={submittedReferenceId} />
+                                  ) : (
+                                    <Alert variant="default">
+                                      <Info className="h-4 w-4" />
+                                      <AlertTitle>Reference SSR Distribution</AlertTitle>
+                                      <AlertDescription>Reference ID not provided during submission, skipping this plot.</AlertDescription>
+                                    </Alert>
+                                  )}
+                                </TabsContent>
+                              </Tabs>
+                              <Separator />
+                              <DataTable
+                                data={availableTableData['ssr_gene_intersect'].data}
+                                columns={availableTableData['ssr_gene_intersect'].columns}
+                                caption="SSR-Gene intersection data."
+                                tableName="ssr_gene_intersect"
+                              />
+                            </>
+                          ) : !isAnyDataLoading && (
+                            <Alert><Info className="h-4 w-4" /><AlertTitle>No SSR-Gene Intersection Data</AlertTitle><AlertDescription>SSR-Gene Intersection data is not available for this job.</AlertDescription></Alert>
+                          )}
                         </TabsContent>
 
-                        <TabsContent value="hotspot_data">
+                        <TabsContent value="hotspot_data" className="space-y-4">
                           {isHotspotLoading ? <TabContentSkeleton /> : isHotspotAvailable && availableTableData['hotspot'] ? (
-                             <Card>
-                               <CardHeader>
-                                 <CardTitle className="text-lg flex items-center">
-                                   <AreaChart className="mr-2 h-5 w-5" /> Hotspot Data & Plot
-                                 </CardTitle>
-                               </CardHeader>
-                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                                  <div className="p-4 border rounded-md min-h-[600px]"> {/* Added container with padding, border, and min-height */}
-                                    <HotspotPlot queryResult={hotspotResult} />
-                                  </div>
-                                  <Separator className="my-4" />
-                                 <DataTable
-                                   data={availableTableData['hotspot'].data}
-                                   columns={availableTableData['hotspot'].columns}
-                                   caption="Hotspot data."
-                                   tableName="hotspot_data"
-                                  />
-                                </CardContent>
-                              </Card>
-                           ) : !isAnyDataLoading && (
+                            <>
+                              <HotspotPlot queryResult={hotspotResult} />
+                              <Separator className="my-4" />
+                              <DataTable
+                                data={availableTableData['hotspot'].data}
+                                columns={availableTableData['hotspot'].columns}
+                                caption="Hotspot data."
+                                tableName="hotspot_data"
+                              />
+                            </>
+                          ) : !isAnyDataLoading && (
                             <Alert><Info className="h-4 w-4" /><AlertTitle>No Hotspot Data</AlertTitle><AlertDescription>Hotspot data is not available for this job.</AlertDescription></Alert>
-                           )}
+                          )}
                         </TabsContent>
 
-                        <TabsContent value="hssr_data">
+                        <TabsContent value="hssr_data" className="space-y-4">
                           {isHssrDataLoading ? <TabContentSkeleton /> : isHssrDataAvailable && availableTableData['hssr_data'] ? (
-                             <Card>
-                               <CardHeader>
-                                 <CardTitle className="text-lg flex items-center">
-                                   <DatabaseZap className="mr-2 h-5 w-5" /> HSSR Data & Related Plots
-                                 </CardTitle>
-                               </CardHeader>
-                               <CardContent className="space-y-8"> {/* Increased spacing between items from 6 to 8 */}
-                                  <Tabs defaultValue="gene_country_sankey" className="w-full">
-                                    <TabsList className="grid w-full grid-cols-3 mb-4"> {/* Increased bottom margin from 2 to 4 */}
-                                      <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5">Gene → Country</TabsTrigger>
-                                      <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5">Temporal Dist.</TabsTrigger>
-                                      <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
-                                    </TabsList>
-                                    <TabsContent value="gene_country_sankey">
-                                      {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
-                                        <GeneCountrySankeyPlot 
-                                          linkDataQueryResult={geneCountrySankeyResult} 
-                                          hotspotDataQueryResult={hssrDataResult} 
-                                        />
-                                      ) : (isGeneCountrySankeyLoading || isHssrDataLoading) ? (
-                                        <Skeleton className="h-[400px] w-full" />
-                                      ) : (geneCountrySankeyResult?.isError || hssrDataResult?.isError) ? (
-                                        <Alert variant="destructive">
-                                           <AlertCircle className="h-4 w-4" />
-                                           <AlertTitle>Gene → Country Plot Error</AlertTitle>
-                                           <AlertDescription>
-                                             {geneCountrySankeyResult?.error ? (geneCountrySankeyResult.error as Error).message : 'Failed to load data.'}
-                                           </AlertDescription>
-                                        </Alert>
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground p-4 text-center">Gene → Country data not available.</p>
-                                      )}
-                                    </TabsContent>
-                                    <TabsContent value="temporal_scatter">
-                                      {/* Uses hssr_data */} 
-                                      <TemporalFacetedScatterPlot queryResult={hssrDataResult} />
-                                    </TabsContent>
-                                    <TabsContent value="ssr_gene_genome_dot">
-                                      {/* Uses hssr_data */} 
-                                      <SsrGeneGenomeDotPlot
-                                        queryResult={hssrDataResult}
-                                        referenceId={submittedReferenceId}
-                                      />
-                                    </TabsContent>
-                                  </Tabs>
-                                  <Separator />
-                                 <DataTable
-                                   data={availableTableData['hssr_data'].data}
-                                   columns={availableTableData['hssr_data'].columns}
-                                   caption="HSSR data."
-                                   tableName="hssr_data"
-                                  />
-                                </CardContent>
-                              </Card>
-                           ) : !isAnyDataLoading && (
+                            <>
+                              <Tabs defaultValue="gene_country_sankey" className="w-full">
+                                <TabsList className="grid w-full grid-cols-3 mb-4">
+                                  <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5">Gene → Country</TabsTrigger>
+                                  <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5">Temporal Dist.</TabsTrigger>
+                                  <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="gene_country_sankey">
+                                  {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
+                                    <GeneCountrySankeyPlot linkDataQueryResult={geneCountrySankeyResult} hotspotDataQueryResult={hssrDataResult} />
+                                  ) : (isGeneCountrySankeyLoading || isHssrDataLoading) ? (
+                                    <Skeleton className="h-[400px] w-full" />
+                                  ) : (geneCountrySankeyResult?.isError || hssrDataResult?.isError) ? (
+                                    <Alert variant="destructive">
+                                      <AlertCircle className="h-4 w-4" />
+                                      <AlertTitle>Gene → Country Plot Error</AlertTitle>
+                                      <AlertDescription>{geneCountrySankeyResult?.error ? (geneCountrySankeyResult.error as Error).message : 'Failed to load data.'}</AlertDescription>
+                                    </Alert>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground p-4 text-center">Gene → Country data not available.</p>
+                                  )}
+                                </TabsContent>
+                                <TabsContent value="temporal_scatter"><TemporalFacetedScatterPlot queryResult={hssrDataResult} /></TabsContent>
+                                <TabsContent value="ssr_gene_genome_dot"><SsrGeneGenomeDotPlot queryResult={hssrDataResult} referenceId={submittedReferenceId} /></TabsContent>
+                              </Tabs>
+                              <Separator />
+                              <DataTable
+                                data={availableTableData['hssr_data'].data}
+                                columns={availableTableData['hssr_data'].columns}
+                                caption="HSSR data."
+                                tableName="hssr_data"
+                              />
+                            </>
+                          ) : !isAnyDataLoading && (
                             <Alert><Info className="h-4 w-4" /><AlertTitle>No HSSR Data</AlertTitle><AlertDescription>HSSR data is not available for this job.</AlertDescription></Alert>
-                           )}
+                          )}
                         </TabsContent>
+                        </TabsContents>
                       </Tabs>
 
                       {/* Use Loader for any loading state that's not failed or completed */}
@@ -1685,7 +1793,7 @@ function HomePage() {
          </motion.div>
        )}
 
-{/* --- Bottom Navigation Bar --- */}
+       {/* --- Bottom Navigation Bar --- */}
         <AnalysisBottomNav onLoadExample={handleLoadExample} onLoadDemo={handleLoadDemoJob} />
     </div>
   );

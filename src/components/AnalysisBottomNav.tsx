@@ -1,4 +1,4 @@
-import { motion, useMotionValue } from "framer-motion";
+import { motion, useMotionValue } from "motion/react";
 import { useState, useEffect } from "react";
 import {
   Home,
@@ -20,7 +20,7 @@ import { Link } from '@tanstack/react-router';
 import { ExampleFilesDrawer } from '@/components/ExampleFilesDrawer';
 import { GuideDrawer } from '@/components/GuideDrawer'; // Import GuideDrawer
 import { AboutDrawer } from '@/components/about-drawer'; // Import AboutDrawer
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "motion/react";
 
 interface AnalysisBottomNavProps {
   onLoadExample: (exampleName: string) => void; // Function to load example data

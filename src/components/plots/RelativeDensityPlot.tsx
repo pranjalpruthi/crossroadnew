@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, BarChartHorizontalBig, Info, Maximize2 } from 'lucide-react'; // Added Maximize2
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
+import { useTheme } from "@/components/theme-provider";
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button'; // Added Button
@@ -67,6 +68,7 @@ interface RelativeDensityPlotProps {
 // Wrap component with React.memo for better performance
 const RelativeDensityPlot: React.FC<RelativeDensityPlotProps> = React.memo(({ queryResult }) => {
   const { data: queryData, isLoading, isError, error } = queryResult;
+  const { resolvedTheme } = useTheme();
 
   // Process data inside the component using useMemo
   const processedData = useMemo(() => {
@@ -197,7 +199,7 @@ const RelativeDensityPlot: React.FC<RelativeDensityPlotProps> = React.memo(({ qu
         // If in fullscreen, adjust chart container styles
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         // Reset styles when exiting fullscreen
         chartDiv.style.height = 'auto';
@@ -406,7 +408,7 @@ const RelativeDensityPlot: React.FC<RelativeDensityPlotProps> = React.memo(({ qu
             }}
             notMerge={true}
             lazyUpdate={true}
-            theme={"light"}
+            theme={resolvedTheme}
           />
         </div>
         {/* Removed the grid and stats column div */}

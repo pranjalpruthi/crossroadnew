@@ -4,6 +4,7 @@ import { type UseQueryResult } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Info, Network, Maximize2, Filter, X } from 'lucide-react'; // Added Filter, X icons
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTheme } from "@/components/theme-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ function getHslColor(index: number, total: number, saturation = 0.6, lightness =
 const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ linkDataQueryResult, hotspotDataQueryResult }) => {
   const { data: linkQueryData, isLoading: isLoadingLinks, isError: isErrorLinks, error: errorLinks } = linkDataQueryResult;
   const { data: hotspotQueryData, isLoading: isLoadingHotspots, isError: isErrorHotspots, error: errorHotspots } = hotspotDataQueryResult;
+  const { resolvedTheme } = useTheme();
 
   // Filter state
   const [selectedGenes, setSelectedGenes] = useState<string[]>([]);
@@ -241,7 +243,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ linkDataQ
       if (chartDiv && document.fullscreenElement === chartDiv) {
         chartDiv.style.height = '100vh';
         chartDiv.style.padding = '20px';
-        chartDiv.style.background = '#ffffff';
+        chartDiv.style.background = resolvedTheme === 'dark' ? '#020817' : '#ffffff';
       } else if (chartDiv) {
         chartDiv.style.height = 'auto';
         chartDiv.style.padding = '0';
@@ -390,7 +392,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ linkDataQ
         },
         label: {
             fontSize: 10,
-            color: '#444' // Slightly darker label
+            color: resolvedTheme === 'dark' ? '#ccc' : '#444'
         },
         nodeAlign: 'justify', // Align nodes vertically
         nodeGap: 12, // Gap between nodes
@@ -602,7 +604,7 @@ const GeneCountrySankeyPlot: React.FC<GeneCountrySankeyPlotProps> = ({ linkDataQ
                style={{ height: `${Math.max(600, stats.total_genes * 25, stats.total_countries * 25)}px`, width: '100%' }}
                notMerge={true}
                lazyUpdate={true}
-               theme={"light"}
+               theme={resolvedTheme}
              />
          </div>
       </CardContent>

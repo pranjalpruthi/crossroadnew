@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Github, Twitter, Linkedin, Globe, BookOpen, GraduationCap, Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
+import { AvatarGroup, AvatarGroupTooltip } from "@/components/animate-ui/components/avatar-group";
 
 interface TeamMember {
   name: string;
@@ -112,14 +112,6 @@ const staggerContainer = {
 };
 
 export function AboutDrawer({ children }: { children?: React.ReactNode }) {
-  // Format team data for AnimatedTooltip
-  const teamTooltipItems = team.map((member, index) => ({
-    id: index,
-    name: member.name,
-    designation: member.role,
-    image: member.image
-  }));
-
   return (
     <Drawer.Root direction="right">
       <Drawer.Trigger asChild>
@@ -163,13 +155,22 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                 </div>
                 
                 {/* Team Animated Tooltip */}
-                <motion.div 
+                <motion.div
                   className="flex justify-center mb-8"
                   variants={fadeIn}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <AnimatedTooltip items={teamTooltipItems} />
-                  </div>
+                  <AvatarGroup className="h-12 -space-x-3">
+                    {team.map((member, index) => (
+                      <Avatar key={index} className="size-12 border-3 border-background">
+                        <AvatarImage src={member.image} alt={member.name} />
+                        <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarGroupTooltip>
+                          <p className="font-bold">{member.name}</p>
+                          <p>{member.role}</p>
+                        </AvatarGroupTooltip>
+                      </Avatar>
+                    ))}
+                  </AvatarGroup>
                 </motion.div>
                 
                 <motion.div 
@@ -316,7 +317,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
                 <h3 className="text-lg font-semibold mb-2">Funding & Institution</h3>
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    This project is funded by the Rockefeller Foundation.
+                    This project was funded by the Rockefeller Foundation.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Hosted at CSIR Institute of Genomics and Integrative Biology (CSIR-IGIB), Delhi, India.
@@ -330,7 +331,7 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
               <motion.div variants={fadeIn}>
                 <h3 className="text-lg font-semibold mb-2">Citation</h3>
                 <code className="block text-sm bg-muted p-4 rounded-md">
-                  Pruthi, P., Narayan, J., & Agarwal, P. (2024). croSSRoad: A tool to cross-compare SSRs across species and families. CSIR-IGIB.
+                 TBA (2025). croSSRoad: A tool to cross-compare SSRs across species and families. CSIR-IGIB.
                 </code>
               </motion.div>
             </div>
@@ -348,4 +349,4 @@ export function AboutDrawer({ children }: { children?: React.ReactNode }) {
       </Drawer.Portal>
     </Drawer.Root>
   );
-} 
+}

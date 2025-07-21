@@ -112,7 +112,7 @@ function MoreOptionsDropdown() {
   );
 }
 
-function NavActions() {
+function NavActions({ isHomePage, isScrolled }: { isHomePage?: boolean, isScrolled?: boolean }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(CITATION)
@@ -128,30 +128,32 @@ function NavActions() {
     }
   }
 
+  const isShrunk = isHomePage && isScrolled;
+
   return (
     <>
       <div className="hidden lg:flex items-center gap-1">
         <AboutDrawer>
           <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
             <Info className="h-4 w-4" />
-            <span className="ml-2">About</span>
+            {!isShrunk && <span className="ml-2">About</span>}
           </Button>
         </AboutDrawer>
         <GuideDrawer>
           <Button variant="ghost" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
             <BookOpen className="h-4 w-4" />
-            <span className="ml-2">Guide</span>
+            {!isShrunk && <span className="ml-2">Guide</span>}
           </Button>
         </GuideDrawer>
         <Link to="/about">
           <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
-            <FileText className="mr-2 h-4 w-4" />
-            <span>Documentation</span>
+            <FileText className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
+            {!isShrunk && <span>Documentation</span>}
           </Button>
         </Link>
         <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2" onClick={handleCopy}>
-          <Copy className="mr-2 h-4 w-4" />
-          <span>Cite this project</span>
+          <Copy className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
+          {!isShrunk && <span>Cite this project</span>}
         </Button>
         <a
           href="https://github.com/BioinformaticsOnLine/croSSRoad"
@@ -160,9 +162,9 @@ function NavActions() {
           className="flex items-center"
         >
           <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
-            <Github className="mr-2 h-4 w-4" />
-            <span>GitHub</span>
-            <ExternalLink className="ml-auto h-3 w-3" />
+            <Github className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
+            {!isShrunk && <span>GitHub</span>}
+            {!isShrunk && <ExternalLink className="ml-auto h-3 w-3" />}
           </Button>
         </a>
       </div>
@@ -241,6 +243,7 @@ export default function Navbar() {
           "w-full h-full relative transition-all duration-300 ease-in-out",
           headerBg,
           headerBorder,
+          isHomePage && "overflow-hidden",
           { 
             [`${headerMaxWidth} mx-auto ${headerPadding}`]: isHomePage && isScrolled,
             [`w-full ${headerPadding}`]: !isHomePage || !isScrolled,
@@ -269,7 +272,9 @@ export default function Navbar() {
             contentHeight,
             contentPadding,
              { 'max-w-7xl': isHomePage && !isScrolled },
-             { 'max-w-3xl': isHomePage && isScrolled}
+             { 'max-w-3xl': isHomePage && isScrolled},
+             { [headerRounded]: isHomePage },
+             isHomePage && "overflow-hidden"
           )}
         >
           <motion.div 
@@ -286,7 +291,7 @@ export default function Navbar() {
                 </span> 
               </ShinyRotatingBorderButton>
             </Link>
-            <NavActions />
+            <NavActions isHomePage={isHomePage} isScrolled={isScrolled} />
           </motion.div>
 
           <motion.div 
@@ -294,15 +299,15 @@ export default function Navbar() {
             className="flex items-center gap-2 sm:gap-3"
           >
             {!isAnalysisPage && (
-              <Link to="/analysis">
+              <Link to="/analysis" className="flex-shrink-0">
                 <FlipButton
                   from="top"
                   frontText={<>
-                    <BarChart2 className="h-4 w-4" />
-                    <span className="ml-2">Start Analysis</span>
+                    <BarChart2 className="h-4 w-4 " />
+                    <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Start Analysis</span>
                   </>}
                   backText="Analyze Now"
-                  className="h-8 gap-1.5 hidden sm:flex"
+                  className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
                   frontClassName="bg-primary text-primary-foreground"
                   backClassName="bg-primary/90"
                 />

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'motion/react';
-import { ArrowRight, BookOpen, GitCompare, Database, BarChart3, Microscope, Dna, Github, Terminal } from 'lucide-react';
+import { ArrowRight, GitCompare, Database, BarChart3, Microscope, Dna, Github, Terminal } from 'lucide-react';
 import { FlipButton } from '@/components/animate-ui/buttons/flip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -236,23 +236,23 @@ function LandingPage() {
 <Link to="/analysis" className="w-full sm:w-auto">
                 <FlipButton
                   from="left"
-                  frontText={<>Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></>}
-                  backText="Start Exploring"
-                  className="w-full sm:w-auto"
+                  frontText={<span className="flex items-center whitespace-nowrap px-4 py-2">Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></span>}
+                  backText={<span className="flex items-center whitespace-nowrap px-4 py-2">Start Exploring</span>}
+                  className="w-full sm:w-auto text-lg"
                   frontClassName="bg-blue-500 hover:bg-blue-600 text-white"
                   backClassName="bg-blue-700"
                 />
               </Link>
-              <Link to="/about" className="w-full sm:w-auto">
+              <a href="https://github.com/BioinformaticsOnLine/croSSRoad" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                 <FlipButton
                   from="right"
-                  frontText={<><BookOpen className="mr-2 h-5 w-5" /> Read Documentation</>}
-                  backText="Learn More"
-                  className="w-full sm:w-auto"
+                  frontText={<span className="flex items-center whitespace-nowrap px-4 py-2"><Github className="mr-2 h-5 w-5" /> GitHub</span>}
+                  backText={<span className="flex items-center whitespace-nowrap px-4 py-2">Learn More</span>}
+                  className="w-full sm:w-auto text-lg"
                   frontClassName="bg-green-500 hover:bg-green-600 text-white"
                   backClassName="bg-green-700"
                 />
-              </Link>
+              </a>
             </motion.div>
           </motion.div>
           
@@ -356,11 +356,11 @@ function LandingPage() {
 <Link to="/analysis" className="w-full sm:w-auto">
                 <FlipButton
                   from="top"
-                  frontText={<>Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></>}
+                  frontText={<> Run Analysis<ArrowRight className="ml-1 h-5 w-4" /></>}
                   backText="Let's Go!"
                   className="w-full sm:w-auto"
-                  frontClassName="bg-purple-500 hover:bg-purple-600 text-white"
-                  backClassName="bg-purple-700"
+                  frontClassName="bg-blue-500 hover:bg-blue-600 text-white"
+                  backClassName="bg-red-500"
                 />
               </Link>
               <div className="w-full sm:w-auto">

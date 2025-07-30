@@ -5,4 +5,4 @@ dist-ssr
 *.local
 .cursorrules
 .env
-.env.local
+.env.local.env

@@ -14,9 +14,11 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as DashboardIndexImport } from './routes/dashboard/index'
+import { Route as CrdIndexImport } from './routes/crd/index'
 import { Route as AnalysisIndexImport } from './routes/analysis/index'
 import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
+import { Route as CrdSearchImport } from './routes/crd/search'
 
 // Create/Update Routes
 
@@ -38,6 +40,12 @@ const DashboardIndexRoute = DashboardIndexImport.update({
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 
+const CrdIndexRoute = CrdIndexImport.update({
+  id: '/crd/',
+  path: '/crd/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AnalysisIndexRoute = AnalysisIndexImport.update({
   id: '/analysis/',
   path: '/analysis/',
@@ -53,6 +61,12 @@ const AboutIndexRoute = AboutIndexImport.update({
 const DemoTanstackQueryRoute = DemoTanstackQueryImport.update({
   id: '/demo/tanstack-query',
   path: '/demo/tanstack-query',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CrdSearchRoute = CrdSearchImport.update({
+  id: '/crd/search',
+  path: '/crd/search',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -74,6 +88,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRoute
     }
+    '/crd/search': {
+      id: '/crd/search'
+      path: '/crd/search'
+      fullPath: '/crd/search'
+      preLoaderRoute: typeof CrdSearchImport
+      parentRoute: typeof rootRoute
+    }
     '/demo/tanstack-query': {
       id: '/demo/tanstack-query'
       path: '/demo/tanstack-query'
@@ -93,6 +114,13 @@ declare module '@tanstack/react-router' {
       path: '/analysis'
       fullPath: '/analysis'
       preLoaderRoute: typeof AnalysisIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/crd/': {
+      id: '/crd/'
+      path: '/crd'
+      fullPath: '/crd'
+      preLoaderRoute: typeof CrdIndexImport
       parentRoute: typeof rootRoute
     }
     '/dashboard/': {
@@ -122,17 +150,21 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/crd/search': typeof CrdSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
   '/analysis': typeof AnalysisIndexRoute
+  '/crd': typeof CrdIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/crd/search': typeof CrdSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
   '/analysis': typeof AnalysisIndexRoute
+  '/crd': typeof CrdIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 
@@ -140,9 +172,11 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/crd/search': typeof CrdSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about/': typeof AboutIndexRoute
   '/analysis/': typeof AnalysisIndexRoute
+  '/crd/': typeof CrdIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 
@@ -151,19 +185,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/crd/search'
     | '/demo/tanstack-query'
     | '/about'
     | '/analysis'
+    | '/crd'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/tanstack-query' | '/about' | '/analysis' | '/dashboard'
+  to:
+    | '/'
+    | '/crd/search'
+    | '/demo/tanstack-query'
+    | '/about'
+    | '/analysis'
+    | '/crd'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/crd/search'
     | '/demo/tanstack-query'
     | '/about/'
     | '/analysis/'
+    | '/crd/'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -171,17 +216,21 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  CrdSearchRoute: typeof CrdSearchRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   AboutIndexRoute: typeof AboutIndexRoute
   AnalysisIndexRoute: typeof AnalysisIndexRoute
+  CrdIndexRoute: typeof CrdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  CrdSearchRoute: CrdSearchRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   AboutIndexRoute: AboutIndexRoute,
   AnalysisIndexRoute: AnalysisIndexRoute,
+  CrdIndexRoute: CrdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -196,9 +245,11 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/dashboard",
+        "/crd/search",
         "/demo/tanstack-query",
         "/about/",
-        "/analysis/"
+        "/analysis/",
+        "/crd/"
       ]
     },
     "/": {
@@ -210,6 +261,9 @@ export const routeTree = rootRoute
         "/dashboard/"
       ]
     },
+    "/crd/search": {
+      "filePath": "crd/search.tsx"
+    },
     "/demo/tanstack-query": {
       "filePath": "demo.tanstack-query.tsx"
     },
@@ -218,6 +272,9 @@ export const routeTree = rootRoute
     },
     "/analysis/": {
       "filePath": "analysis/index.tsx"
+    },
+    "/crd/": {
+      "filePath": "crd/index.tsx"
     },
     "/dashboard/": {
       "filePath": "dashboard/index.tsx",

@@ -14,11 +14,12 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as DashboardIndexImport } from './routes/dashboard/index'
-import { Route as CrdIndexImport } from './routes/crd/index'
+import { Route as CroSSRoadDBIndexImport } from './routes/croSSRoadDB/index'
 import { Route as AnalysisIndexImport } from './routes/analysis/index'
 import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
-import { Route as CrdSearchImport } from './routes/crd/search'
+import { Route as CroSSRoadDBSearchImport } from './routes/croSSRoadDB/search'
+import { Route as CroSSRoadDBProjectProjectIdImport } from './routes/croSSRoadDB/project/$projectId'
 
 // Create/Update Routes
 
@@ -40,9 +41,9 @@ const DashboardIndexRoute = DashboardIndexImport.update({
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 
-const CrdIndexRoute = CrdIndexImport.update({
-  id: '/crd/',
-  path: '/crd/',
+const CroSSRoadDBIndexRoute = CroSSRoadDBIndexImport.update({
+  id: '/croSSRoadDB/',
+  path: '/croSSRoadDB/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -64,11 +65,18 @@ const DemoTanstackQueryRoute = DemoTanstackQueryImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const CrdSearchRoute = CrdSearchImport.update({
-  id: '/crd/search',
-  path: '/crd/search',
+const CroSSRoadDBSearchRoute = CroSSRoadDBSearchImport.update({
+  id: '/croSSRoadDB/search',
+  path: '/croSSRoadDB/search',
   getParentRoute: () => rootRoute,
 } as any)
+
+const CroSSRoadDBProjectProjectIdRoute =
+  CroSSRoadDBProjectProjectIdImport.update({
+    id: '/croSSRoadDB/project/$projectId',
+    path: '/croSSRoadDB/project/$projectId',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -88,11 +96,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRoute
     }
-    '/crd/search': {
-      id: '/crd/search'
-      path: '/crd/search'
-      fullPath: '/crd/search'
-      preLoaderRoute: typeof CrdSearchImport
+    '/croSSRoadDB/search': {
+      id: '/croSSRoadDB/search'
+      path: '/croSSRoadDB/search'
+      fullPath: '/croSSRoadDB/search'
+      preLoaderRoute: typeof CroSSRoadDBSearchImport
       parentRoute: typeof rootRoute
     }
     '/demo/tanstack-query': {
@@ -116,11 +124,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalysisIndexImport
       parentRoute: typeof rootRoute
     }
-    '/crd/': {
-      id: '/crd/'
-      path: '/crd'
-      fullPath: '/crd'
-      preLoaderRoute: typeof CrdIndexImport
+    '/croSSRoadDB/': {
+      id: '/croSSRoadDB/'
+      path: '/croSSRoadDB'
+      fullPath: '/croSSRoadDB'
+      preLoaderRoute: typeof CroSSRoadDBIndexImport
       parentRoute: typeof rootRoute
     }
     '/dashboard/': {
@@ -129,6 +137,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexImport
       parentRoute: typeof DashboardRouteImport
+    }
+    '/croSSRoadDB/project/$projectId': {
+      id: '/croSSRoadDB/project/$projectId'
+      path: '/croSSRoadDB/project/$projectId'
+      fullPath: '/croSSRoadDB/project/$projectId'
+      preLoaderRoute: typeof CroSSRoadDBProjectProjectIdImport
+      parentRoute: typeof rootRoute
     }
   }
 }
@@ -150,34 +165,37 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/crd/search': typeof CrdSearchRoute
+  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
   '/analysis': typeof AnalysisIndexRoute
-  '/crd': typeof CrdIndexRoute
+  '/croSSRoadDB': typeof CroSSRoadDBIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/crd/search': typeof CrdSearchRoute
+  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about': typeof AboutIndexRoute
   '/analysis': typeof AnalysisIndexRoute
-  '/crd': typeof CrdIndexRoute
+  '/croSSRoadDB': typeof CroSSRoadDBIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/crd/search': typeof CrdSearchRoute
+  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/about/': typeof AboutIndexRoute
   '/analysis/': typeof AnalysisIndexRoute
-  '/crd/': typeof CrdIndexRoute
+  '/croSSRoadDB/': typeof CroSSRoadDBIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
 }
 
 export interface FileRouteTypes {
@@ -185,52 +203,57 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
-    | '/crd/search'
+    | '/croSSRoadDB/search'
     | '/demo/tanstack-query'
     | '/about'
     | '/analysis'
-    | '/crd'
+    | '/croSSRoadDB'
     | '/dashboard/'
+    | '/croSSRoadDB/project/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/crd/search'
+    | '/croSSRoadDB/search'
     | '/demo/tanstack-query'
     | '/about'
     | '/analysis'
-    | '/crd'
+    | '/croSSRoadDB'
     | '/dashboard'
+    | '/croSSRoadDB/project/$projectId'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
-    | '/crd/search'
+    | '/croSSRoadDB/search'
     | '/demo/tanstack-query'
     | '/about/'
     | '/analysis/'
-    | '/crd/'
+    | '/croSSRoadDB/'
     | '/dashboard/'
+    | '/croSSRoadDB/project/$projectId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  CrdSearchRoute: typeof CrdSearchRoute
+  CroSSRoadDBSearchRoute: typeof CroSSRoadDBSearchRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   AboutIndexRoute: typeof AboutIndexRoute
   AnalysisIndexRoute: typeof AnalysisIndexRoute
-  CrdIndexRoute: typeof CrdIndexRoute
+  CroSSRoadDBIndexRoute: typeof CroSSRoadDBIndexRoute
+  CroSSRoadDBProjectProjectIdRoute: typeof CroSSRoadDBProjectProjectIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
-  CrdSearchRoute: CrdSearchRoute,
+  CroSSRoadDBSearchRoute: CroSSRoadDBSearchRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   AboutIndexRoute: AboutIndexRoute,
   AnalysisIndexRoute: AnalysisIndexRoute,
-  CrdIndexRoute: CrdIndexRoute,
+  CroSSRoadDBIndexRoute: CroSSRoadDBIndexRoute,
+  CroSSRoadDBProjectProjectIdRoute: CroSSRoadDBProjectProjectIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -245,11 +268,12 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/dashboard",
-        "/crd/search",
+        "/croSSRoadDB/search",
         "/demo/tanstack-query",
         "/about/",
         "/analysis/",
-        "/crd/"
+        "/croSSRoadDB/",
+        "/croSSRoadDB/project/$projectId"
       ]
     },
     "/": {
@@ -261,8 +285,8 @@ export const routeTree = rootRoute
         "/dashboard/"
       ]
     },
-    "/crd/search": {
-      "filePath": "crd/search.tsx"
+    "/croSSRoadDB/search": {
+      "filePath": "croSSRoadDB/search.tsx"
     },
     "/demo/tanstack-query": {
       "filePath": "demo.tanstack-query.tsx"
@@ -273,12 +297,15 @@ export const routeTree = rootRoute
     "/analysis/": {
       "filePath": "analysis/index.tsx"
     },
-    "/crd/": {
-      "filePath": "crd/index.tsx"
+    "/croSSRoadDB/": {
+      "filePath": "croSSRoadDB/index.tsx"
     },
     "/dashboard/": {
       "filePath": "dashboard/index.tsx",
       "parent": "/dashboard"
+    },
+    "/croSSRoadDB/project/$projectId": {
+      "filePath": "croSSRoadDB/project/$projectId.tsx"
     }
   }
 }

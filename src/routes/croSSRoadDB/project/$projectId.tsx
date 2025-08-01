@@ -8,6 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 import {
   DropdownMenu,
@@ -36,7 +44,7 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-  getPaginationRowModel,
+
   getFilteredRowModel,
   getSortedRowModel,
   type SortingState,
@@ -72,25 +80,11 @@ interface VirtualDataTableProps {
   caption?: string;
 }
 
-interface DataTableProps<TData> {
-  data: TData[];
-  columns: ColumnDef<TData>[];
-  caption?: string;
-  tableName?: string;
-}
 
 
 
-// Helper function for formatting loci and length (same as analysis page)
-function formatLociAndLength(loci: string, lengths: string) {
-  const lociArray = loci.split(':').map(l => l.trim());
-  const lengthsArray = lengths.split(':').map(l => l.trim());
 
-  return lociArray.map((locus, index) => ({
-    locus,
-    length: lengthsArray[index] || 'N/A'
-  }));
-}
+
 
 // Virtual DataTable with infinite scrolling
 function VirtualDataTable({ projectId, plotKey, tableName, caption }: VirtualDataTableProps) {
@@ -256,12 +250,27 @@ function VirtualDataTable({ projectId, plotKey, tableName, caption }: VirtualDat
     return data?.pages.flatMap((page: any) => page.data) ?? []
   }, [data])
 
-  // Generate columns dynamically
+  // Generate columns dynamically with consistent ordering
   const columns = useMemo(() => {
     if (allRows.length === 0) return []
-    return Object.keys(allRows[0]).map(colKey => ({
+
+    // Get all unique column keys from the first few rows to ensure consistency
+    const columnKeys = new Set<string>()
+    const sampleSize = Math.min(10, allRows.length)
+
+    for (let i = 0; i < sampleSize; i++) {
+      Object.keys(allRows[i] || {}).forEach(key => columnKeys.add(key))
+    }
+
+    // Convert to sorted array for consistent ordering
+    const sortedKeys = Array.from(columnKeys).sort()
+
+    return sortedKeys.map(colKey => ({
       accessorKey: colKey,
       header: colKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      size: 160, // Fixed size for consistency
+      minSize: 160,
+      maxSize: 160,
     }))
   }, [allRows])
 
@@ -282,6 +291,18 @@ function VirtualDataTable({ projectId, plotKey, tableName, caption }: VirtualDat
     manualSorting: true, // We handle sorting in the query
     manualFiltering: true, // We handle filtering in the query
   })
+
+  // Debug: Log column information
+  React.useEffect(() => {
+    if (allRows.length > 0) {
+      console.log('🔍 DEBUG - Column Analysis:')
+      console.log('Generated columns:', columns.map(c => c.accessorKey))
+      console.log('First row keys:', Object.keys(allRows[0]))
+      console.log('Table headers:', table.getHeaderGroups()[0]?.headers.map(h => h.id))
+      console.log('Visible columns:', table.getVisibleLeafColumns().map(c => c.id))
+      console.log('First row data sample:', allRows[0])
+    }
+  }, [columns, allRows, table])
 
   const { rows } = table.getRowModel()
 
@@ -419,108 +440,129 @@ function VirtualDataTable({ projectId, plotKey, tableName, caption }: VirtualDat
         </div>
       </div>
 
-      {/* Virtual Table */}
-      <div className="border rounded-lg shadow-sm bg-white dark:bg-gray-950">
+      {/* Virtual Table using shadcn/ui components */}
+      <div className="w-full border rounded-lg shadow-sm bg-background">
         {caption && (
-          <div className="px-4 py-3 text-sm text-muted-foreground border-b bg-gray-50/50 dark:bg-gray-900/50 rounded-t-lg">
+          <div className="px-4 py-3 text-sm text-muted-foreground border-b bg-muted/50 rounded-t-lg">
             {caption}
           </div>
         )}
 
-        {/* Table Header */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b sticky top-0 z-10">
-          <div className="flex">
+        <Table style={{ minWidth: `${table.getVisibleLeafColumns().length * 160}px` }}>
+          <colgroup>
+            {table.getVisibleLeafColumns().map(column => (
+              <col key={column.id} style={{ width: '160px' }} />
+            ))}
+          </colgroup>
+
+          <TableHeader className="sticky top-0 z-10 bg-muted/50">
             {table.getHeaderGroups().map(headerGroup => (
-              headerGroup.headers.map(header => (
-                <div
-                  key={header.id}
-                  className="px-3 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide cursor-pointer select-none border-r border-gray-200 dark:border-gray-700 last:border-r-0 min-w-[140px] max-w-[200px] flex-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate">
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </span>
-                    <div className="flex-shrink-0">
-                      {{
-                        asc: <ChevronUpIcon className="h-4 w-4 text-blue-500" />,
-                        desc: <ChevronDownIcon className="h-4 w-4 text-blue-500" />,
-                      }[header.column.getIsSorted() as string] ?? (
-                          <div className="h-4 w-4 opacity-0 group-hover:opacity-50">
-                            <ChevronUpIcon className="h-4 w-4" />
-                          </div>
-                        )}
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <TableHead
+                    key={header.id}
+                    className="cursor-pointer select-none hover:bg-muted/80 transition-colors px-3 py-4"
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-xs font-semibold uppercase tracking-wide">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </span>
+                      <div className="flex-shrink-0">
+                        {{
+                          asc: <ChevronUpIcon className="h-4 w-4 text-primary" />,
+                          desc: <ChevronDownIcon className="h-4 w-4 text-primary" />,
+                        }[header.column.getIsSorted() as string] ?? (
+                            <div className="h-4 w-4 opacity-0 group-hover:opacity-50">
+                              <ChevronUpIcon className="h-4 w-4" />
+                            </div>
+                          )}
+                      </div>
                     </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={table.getVisibleLeafColumns().length} className="p-0">
+                <div
+                  ref={parentRef}
+                  className="h-[600px] overflow-y-auto"
+                >
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      position: 'relative',
+                    }}
+                  >
+                    {virtualItems.map((virtualItem) => {
+                      const isLoaderRow = virtualItem.index > rows.length - 1
+                      const row = rows[virtualItem.index]
+
+                      return (
+                        <div
+                          key={virtualItem.index}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualItem.size}px`,
+                            transform: `translateY(${virtualItem.start}px)`,
+                          }}
+                          className={`border-b hover:bg-muted/50 transition-colors ${virtualItem.index % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+                            }`}
+                        >
+                          {isLoaderRow ? (
+                            <div className="flex items-center justify-center w-full py-6">
+                              {hasNextPage ? (
+                                <div className="flex items-center gap-3">
+                                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                                  <span className="text-sm text-muted-foreground font-medium">Loading more data...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <div className="h-1 w-1 rounded-full bg-current"></div>
+                                  <span className="text-sm">End of data</span>
+                                  <div className="h-1 w-1 rounded-full bg-current"></div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <Table>
+                              <colgroup>
+                                {table.getVisibleLeafColumns().map(column => (
+                                  <col key={column.id} style={{ width: '160px' }} />
+                                ))}
+                              </colgroup>
+                              <TableBody>
+                                <TableRow className="border-0 hover:bg-transparent">
+                                  {row.getVisibleCells().map((cell, cellIndex) => (
+                                    <TableCell
+                                      key={cell.id}
+                                      className={`px-3 py-3 ${cellIndex === 0 ? 'font-medium' : ''}`}
+                                    >
+                                      <div className="truncate w-full" title={String(cell.getValue())}>
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                      </div>
+                                    </TableCell>
+                                  ))}
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              ))
-            ))}
-          </div>
-        </div>
-
-        {/* Virtual Scrolling Container */}
-        <div
-          ref={parentRef}
-          className="h-[600px] overflow-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
-        >
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {virtualItems.map((virtualItem) => {
-              const isLoaderRow = virtualItem.index > rows.length - 1
-              const row = rows[virtualItem.index]
-
-              return (
-                <div
-                  key={virtualItem.index}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualItem.size}px`,
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                  className={`flex border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors ${virtualItem.index % 2 === 0 ? 'bg-white dark:bg-gray-950' : 'bg-gray-50/30 dark:bg-gray-900/30'
-                    }`}
-                >
-                  {isLoaderRow ? (
-                    <div className="flex items-center justify-center w-full py-6">
-                      {hasNextPage ? (
-                        <div className="flex items-center gap-3">
-                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
-                          <span className="text-sm text-muted-foreground font-medium">Loading more data...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <div className="h-1 w-1 rounded-full bg-current"></div>
-                          <span className="text-sm">End of data</span>
-                          <div className="h-1 w-1 rounded-full bg-current"></div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    row.getVisibleCells().map((cell, cellIndex) => (
-                      <div
-                        key={cell.id}
-                        className={`px-3 py-3 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0 min-w-[140px] max-w-[200px] flex-1 flex items-center ${cellIndex === 0 ? 'font-medium text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
-                          }`}
-                      >
-                        <div className="truncate w-full" title={String(cell.getValue())}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Status */}
@@ -1146,32 +1188,42 @@ function ProjectDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Run ID</th>
-                        <th className="text-left p-2">Job ID</th>
-                        <th className="text-left p-2">Reference</th>
-                        <th className="text-left p-2">Genomes</th>
-                        <th className="text-left p-2">SSRs</th>
-                        <th className="text-left p-2">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {runs?.map((run, index) => (
-                        <tr key={index} className="border-b hover:bg-muted/50">
-                          <td className="p-2 font-mono">#{run.run_id}</td>
-                          <td className="p-2 font-mono text-xs">{run.job_id}</td>
-                          <td className="p-2 font-mono text-xs">{run.reference_genome_id}</td>
-                          <td className="p-2">{run.genomes_used_count?.toLocaleString()}</td>
-                          <td className="p-2">{run.ssrs_total_count?.toLocaleString()}</td>
-                          <td className="p-2">{new Date(run.run_timestamp).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <colgroup>
+                    <col style={{ width: '100px' }} />
+                    <col style={{ width: '200px' }} />
+                    <col style={{ width: '150px' }} />
+                    <col style={{ width: '100px' }} />
+                    <col style={{ width: '100px' }} />
+                    <col style={{ width: '120px' }} />
+                  </colgroup>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Run ID</TableHead>
+                      <TableHead>Job ID</TableHead>
+                      <TableHead>Reference</TableHead>
+                      <TableHead>Genomes</TableHead>
+                      <TableHead>SSRs</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {runs?.map((run, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-mono">#{run.run_id}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="truncate" title={run.job_id}>{run.job_id}</div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="truncate" title={run.reference_genome_id}>{run.reference_genome_id}</div>
+                        </TableCell>
+                        <TableCell>{run.genomes_used_count?.toLocaleString()}</TableCell>
+                        <TableCell>{run.ssrs_total_count?.toLocaleString()}</TableCell>
+                        <TableCell>{new Date(run.run_timestamp).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>

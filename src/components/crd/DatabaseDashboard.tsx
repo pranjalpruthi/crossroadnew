@@ -3,6 +3,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, ScatterChart, Scatter } from 'recharts'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
@@ -15,9 +23,9 @@ export function DatabaseDashboard() {
       const { data } = await supabase
         .from('projects')
         .select('organism_name, project_id')
-      
+
       if (!data) return []
-      
+
       // Get genome counts for each project via analysis_runs
       const projectCounts = await Promise.all(
         data.map(async (project) => {
@@ -25,16 +33,16 @@ export function DatabaseDashboard() {
             .from('analysis_runs')
             .select('genomes_used_count')
             .eq('project_id', project.project_id)
-          
+
           const totalGenomes = runs?.reduce((sum, run) => sum + (run.genomes_used_count || 0), 0) || 0
-          
+
           return {
             organism: project.organism_name,
             genomes: totalGenomes,
           }
         })
       )
-      
+
       return projectCounts
     },
   })
@@ -47,15 +55,15 @@ export function DatabaseDashboard() {
         .from('merged_out')
         .select('motif')
         .limit(1000)
-      
+
       if (!data) return []
-      
+
       const motifCounts = data.reduce((acc: Record<string, number>, ssr) => {
         const motif = ssr.motif
         acc[motif] = (acc[motif] || 0) + 1
         return acc
       }, {})
-      
+
       return Object.entries(motifCounts)
         .map(([motif, count]) => ({ motif, count }))
         .sort((a, b) => b.count - a.count)
@@ -72,9 +80,9 @@ export function DatabaseDashboard() {
         .select('year')
         .not('year', 'is', null)
         .limit(1000)
-      
+
       if (!data) return []
-      
+
       const yearCounts = data.reduce((acc: Record<number, number>, genome) => {
         const year = genome.year
         if (year) {
@@ -82,7 +90,7 @@ export function DatabaseDashboard() {
         }
         return acc
       }, {})
-      
+
       return Object.entries(yearCounts)
         .map(([year, count]) => ({ year: parseInt(year), count }))
         .sort((a, b) => a.year - b.year)
@@ -98,7 +106,7 @@ export function DatabaseDashboard() {
         .select('motif, gene, genomeid_count, length_of_motif')
         .order('genomeid_count', { ascending: false })
         .limit(20)
-      
+
       return data || []
     },
   })
@@ -111,9 +119,9 @@ export function DatabaseDashboard() {
         .from('merged_out')
         .select('length_of_ssr, motif')
         .limit(1000)
-      
+
       if (!data) return []
-      
+
       const lengthCounts = data.reduce((acc: Record<number, number>, ssr) => {
         const length = ssr.length_of_ssr
         if (length && length <= 100) { // Filter out extremely long SSRs for visualization
@@ -121,7 +129,7 @@ export function DatabaseDashboard() {
         }
         return acc
       }, {})
-      
+
       return Object.entries(lengthCounts)
         .map(([length, count]) => ({ length: parseInt(length), count }))
         .sort((a, b) => a.length - b.length)
@@ -129,8 +137,8 @@ export function DatabaseDashboard() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6 w-full overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Organism Distribution */}
         <Card>
           <CardHeader>
@@ -143,8 +151,8 @@ export function DatabaseDashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={organismData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="organism" 
+                  <XAxis
+                    dataKey="organism"
                     angle={-45}
                     textAnchor="end"
                     height={80}
@@ -180,7 +188,7 @@ export function DatabaseDashboard() {
                     fill="#8884d8"
                     dataKey="count"
                   >
-                    {motifData?.map((entry, index) => (
+                    {motifData?.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -249,50 +257,59 @@ export function DatabaseDashboard() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Motif</th>
-                    <th className="text-left p-2">Gene</th>
-                    <th className="text-left p-2">Motif Length</th>
-                    <th className="text-left p-2">Genome Count</th>
-                    <th className="text-left p-2">Hotspot Score</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {hotspotData?.map((hotspot, index) => (
-                    <tr key={index} className="border-b hover:bg-muted/50">
-                      <td className="p-2">
-                        <Badge variant="outline" className="font-mono">
-                          {hotspot.motif}
-                        </Badge>
-                      </td>
-                      <td className="p-2">{hotspot.gene || 'N/A'}</td>
-                      <td className="p-2">{hotspot.length_of_motif}</td>
-                      <td className="p-2">
-                        <Badge variant="secondary">
-                          {hotspot.genomeid_count}
-                        </Badge>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center">
-                          <div className="w-16 bg-muted rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-primary h-2 rounded-full" 
-                              style={{ width: `${Math.min(100, (hotspot.genomeid_count / 50) * 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {((hotspot.genomeid_count / 50) * 100).toFixed(0)}%
-                          </span>
+            <Table>
+              <colgroup>
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '150px' }} />
+                <col style={{ width: '80px' }} />
+                <col style={{ width: '100px' }} />
+                <col style={{ width: '180px' }} />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-medium">Motif</TableHead>
+                  <TableHead className="font-medium">Gene</TableHead>
+                  <TableHead className="font-medium">Length</TableHead>
+                  <TableHead className="font-medium">Genomes</TableHead>
+                  <TableHead className="font-medium">Score</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {hotspotData?.map((hotspot, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {hotspot.motif}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="truncate" title={hotspot.gene || 'N/A'}>
+                        {hotspot.gene || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">{hotspot.length_of_motif}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {hotspot.genomeid_count}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-muted rounded-full h-2 min-w-[60px]">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, (hotspot.genomeid_count / 50) * 100)}%` }}
+                          />
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {((hotspot.genomeid_count / 50) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

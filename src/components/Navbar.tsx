@@ -1,6 +1,6 @@
 import { motion } from "motion/react"
 import { ModeToggle } from '@/components/mode-toggle'
-import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Github, BarChart2, MoreHorizontal, ExternalLink } from 'lucide-react'
+import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, Github, BarChart2, MoreHorizontal, ExternalLink, Database } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
@@ -203,6 +203,7 @@ export default function Navbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHomePage = pathname === '/'
   const isAnalysisPage = pathname === '/analysis/'
+  const isDatabasePage = pathname.startsWith('/croSSRoadDB')
 
   const config = { auth: { enabled: false } };
   const UserProfile = () => <div className="h-8 w-8 rounded-full bg-muted" />;
@@ -298,29 +299,55 @@ export default function Navbar() {
             layout="position"
             className="flex items-center gap-2 sm:gap-3"
           >
-            {!isAnalysisPage && (
-              <Link to="/analysis" className="flex-shrink-0">
-                <FlipButton
-                  from="top"
-                  frontText={<>
-                    <BarChart2 className="h-4 w-4 " />
-                    <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Start Analysis</span>
-                  </>}
-                  backText="Analyze Now"
-                  className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
-                  frontClassName="bg-primary text-primary-foreground"
-                  backClassName="bg-primary/90"
-                />
-                <FlipButton
-                  from="top"
-                  frontText={<BarChart2 className="h-4 w-4" />}
-                  backText="Go"
-                  className="h-8 w-8 p-0 sm:hidden"
-                  frontClassName="bg-primary text-primary-foreground"
-                  backClassName="bg-primary/90"
-                />
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              {!isAnalysisPage && (
+                <Link to="/analysis" className="flex-shrink-0">
+                  <FlipButton
+                    from="top"
+                    frontText={<>
+                      <BarChart2 className="h-4 w-4 " />
+                      <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Start Analysis</span>
+                    </>}
+                    backText="Analyze Now"
+                    className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
+                    frontClassName="bg-primary text-primary-foreground"
+                    backClassName="bg-primary/90"
+                  />
+                  <FlipButton
+                    from="top"
+                    frontText={<BarChart2 className="h-4 w-4" />}
+                    backText="Go"
+                    className="h-8 w-8 p-0 sm:hidden"
+                    frontClassName="bg-primary text-primary-foreground"
+                    backClassName="bg-primary/90"
+                  />
+                </Link>
+              )}
+              
+              {!isDatabasePage && (
+                <Link to="/croSSRoadDB" className="flex-shrink-0">
+                  <FlipButton
+                    from="top"
+                    frontText={<>
+                      <Database className="h-4 w-4" />
+                      <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Database</span>
+                    </>}
+                    backText="Browse DB"
+                    className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
+                    frontClassName="bg-blue-600 text-white hover:bg-blue-700"
+                    backClassName="bg-blue-700"
+                  />
+                  <FlipButton
+                    from="top"
+                    frontText={<Database className="h-4 w-4" />}
+                    backText="DB"
+                    className="h-8 w-8 p-0 sm:hidden"
+                    frontClassName="bg-blue-600 text-white hover:bg-blue-700"
+                    backClassName="bg-blue-700"
+                  />
+                </Link>
+              )}
+            </div>
             <div className={clsx(
               "hidden lg:block",
               isHomePage && "hidden"

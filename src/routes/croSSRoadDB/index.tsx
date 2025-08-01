@@ -84,7 +84,7 @@ function CrdDbPage() {
   }
 
   return (
-    <div className="container mx-auto pt-24 pb-8 sm:py-12 md:py-16 lg:py-20 space-y-6 sm:space-y-8 md:space-y-12 lg:space-y-16 px-4 sm:px-6 max-w-full">
+    <div className="container mx-auto pt-24 pb-8 sm:py-12 md:py-16 lg:py-20 space-y-6 sm:space-y-8 md:space-y-12 lg:space-y-16 px-4 sm:px-6 max-w-7xl overflow-hidden">
       {/* Hero Section */}
       <div className="flex flex-col items-center justify-center text-center space-y-8">
         <div className="space-y-4">

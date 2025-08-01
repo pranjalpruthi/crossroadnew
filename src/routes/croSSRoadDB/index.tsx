@@ -92,8 +92,7 @@ function CrdDbPage() {
             cro<span className="bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent">SSR</span>oadDB
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            Explore cross-species Simple Sequence Repeats database with comprehensive genome analysis
-          </p>
+          Repository for SSR analysis spanning varied genomes of multiple species and tracking evolutionary patterns</p>
         </div>
 
         {/* Search Bar */}

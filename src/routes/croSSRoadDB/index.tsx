@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Search, Dna, Database, Repeat, TestTube, BarChart3, Activity, Globe } from 'lucide-react'
+import { Search, Dna, Database, Repeat, TestTube, BarChart3, Activity, Globe, Tag } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useState } from 'react'
@@ -39,7 +39,7 @@ function CrdDbPage() {
         supabase.from('mutational_hotspots').select('*', { count: 'exact', head: true }),
         supabase.from('projects').select('project_id, project_name, organism_name, description, creation_date'),
         supabase.from('analysis_runs').select('run_id, project_id, genomes_used_count, ssrs_total_count, run_timestamp'),
-        supabase.from('merged_out').select('category, optional_category, year, motif').limit(1000),
+        supabase.from('merged_out').select('category, optional_category, year, motif').limit(50000),
       ])
 
       // Process additional stats from actual data
@@ -92,7 +92,7 @@ function CrdDbPage() {
             cro<span className="bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent">SSR</span>oadDB
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
-          Repository for SSR analysis spanning varied genomes of multiple species and tracking evolutionary patterns</p>
+            Repository for SSR analysis spanning varied genomes of multiple species and tracking evolutionary patterns</p>
         </div>
 
         {/* Search Bar */}
@@ -200,8 +200,8 @@ function CrdDbPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Countries</CardTitle>
-              <Globe className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Optional Category</CardTitle>
+              <Tag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {isLoadingStats ? (

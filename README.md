@@ -26,6 +26,26 @@ croSSRoad web-based platform for analyzing Simple Sequence Repeat (SSR) patterns
 - Web Worker (Apache Arrow) for CPU-intensive data transformation
 - Tailwind CSS & Shadcn/UI components
 
+
 ## License
 
 MIT
+
+## Database Setup
+
+To recreate the Supabase database:
+
+1.  **Set up the Schema**:
+    - Go to the Supabase SQL Editor.
+    - Copy and paste the content from `supabase/schema.sql`.
+    - Run the script to create the tables.
+
+2.  **Upload Data**:
+    - Ensure your `.env` file contains `DB_USER` and `DB_PASSWORD`.
+    - Run the upload script:
+      ```bash
+3.  **Verify Data**:
+    - Run the verification script to check row counts:
+      ```bash
+      python scripts/check_counts.py
+      ```

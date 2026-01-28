@@ -9,7 +9,7 @@ export const Route = createRootRoute({
   component: () => {
     const matches = useMatches()
     // Check if any of the matched routes starts with '/dashboard'
-    const isDashboardRoute = matches.some(match => 
+    const isDashboardRoute = matches.some(match =>
       match.routeId.startsWith('/dashboard')
     )
 

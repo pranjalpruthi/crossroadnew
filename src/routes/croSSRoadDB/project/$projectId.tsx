@@ -664,15 +664,39 @@ function ProjectDetailPage() {
         try {
           console.log(`Fetching ${plotKey} data from ${tableName} for run_id(s): ${runIds.join(', ')}...`)
 
-          // For plots, we only need a reasonable sample size, not ALL data
-          // This prevents memory issues and improves performance
-          const maxRowsForPlots = plotKey === 'hotspot' ? 1000 : 5000; // Hotspots are usually small
+          // For plots, we increase the limit to capture more diversity in the Sankey plots
+          // Hotspots are smaller, so 5000 is usually enough. For others, we try 50,000 to get a good spread.
+          // User requested limit reduction for performance testing
+          const maxRowsForPlots = plotKey === 'hotspot' ? 5000 : 10000;
 
           let query = supabase
             .from(tableName)
             .select(selectFields)
-            .in('run_id', runIds)
-            .limit(maxRowsForPlots)
+
+          // SPECIAL HANDLING for gene_country_sankey:
+          // We must ensure we fetch genes that actually exist in the hotspot table (hssr_data).
+          // Otherwise, with a limit, we might miss the intersecting genes if they are deep in the table.
+          if (plotKey === 'gene_country_sankey') {
+            // 1. Fetch the hotspot genes first
+            const { data: hotspotGenesData } = await supabase
+              .from('hssr_data')
+              .select('gene')
+              .in('run_id', runIds)
+
+            if (hotspotGenesData && hotspotGenesData.length > 0) {
+              const genes = hotspotGenesData.map(r => r.gene).filter(Boolean)
+              // 2. Filter the main query to only include these genes
+              if (genes.length > 0) {
+                query = query.in('gene', genes)
+              }
+            }
+          }
+
+          if (runIds.length > 0) {
+            query = query.in('run_id', runIds)
+          }
+
+          query = query.limit(maxRowsForPlots)
 
           // Add ordering based on table structure
           if (plotKey === 'hotspot') {
@@ -729,7 +753,10 @@ function ProjectDetailPage() {
               if ('motif' in row) transformed.motif = row.motif
               if ('gene' in row) transformed.gene = row.gene
               if ('category' in row) transformed.category = row.category
-              if ('optional_category' in row) transformed.optional_category = row.optional_category
+              if ('optional_category' in row) {
+                transformed.optional_category = row.optional_category
+                transformed.country = row.optional_category // Map for Sankey plots
+              }
               if ('year' in row) transformed.year = row.year
               if ('length_of_motif' in row) transformed.length_of_motif = row.length_of_motif
               if ('loci' in row) transformed.loci = row.loci

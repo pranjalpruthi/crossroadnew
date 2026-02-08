@@ -71,8 +71,8 @@ import { ExampleFilesDrawer } from "@/components/ExampleFilesDrawer";
 // --- Icons and Animation ---
 import { Counter } from '@/components/animate-ui/components/counter';
 import {
-    AlertCircle, Download, Info, Search,
-    GitBranch,
+  AlertCircle, Download, Info, Search,
+  GitBranch,
   ChevronUpIcon, ChevronDownIcon,
   ChevronFirstIcon,
   ChevronLastIcon,
@@ -224,24 +224,24 @@ const ACCEPTED_BED_EXTENSIONS = ['.bed'];
 
 // Helper for file validation schema
 const fileSchema = (required: boolean) => {
-    const baseSchema = z.instanceof(FileList).refine(
-        (files) => files === undefined || files.length === 0 || (files.length === 1 && files[0].size <= MAX_FILE_SIZE),
-        `Max file size is 500MB.`
-    );
-    if (required) {
-        return baseSchema
-            .refine((files) => files !== undefined && files.length === 1, 'File is required.');
-    }
-    return baseSchema.optional();
+  const baseSchema = z.instanceof(FileList).refine(
+    (files) => files === undefined || files.length === 0 || (files.length === 1 && files[0].size <= MAX_FILE_SIZE),
+    `Max file size is 500MB.`
+  );
+  if (required) {
+    return baseSchema
+      .refine((files) => files !== undefined && files.length === 1, 'File is required.');
+  }
+  return baseSchema.optional();
 };
 
 // Schema for PERF parameters with defaults for parsing
 const perfSchema = z.object({
-  mono: z.number().int().min(1).default(10),
+  mono: z.number().int().min(1).default(12),
   di: z.number().int().min(1).default(6),
   tri: z.number().int().min(1).default(4),
   tetra: z.number().int().min(1).default(3),
-  penta: z.number().int().min(1).default(2),
+  penta: z.number().int().min(1).default(3),
   hexa: z.number().int().min(1).default(2),
   minLen: z.number().int().min(0).default(1000),
   maxLen: z.number().int().min(0).default(10000000),
@@ -289,11 +289,11 @@ type FormDefaultValues = {
 
 // Descriptions for PERF parameters, used in Popovers
 const perfParamDescriptions: Record<keyof PerfParams, string> = {
-  mono: "Mononucleotide repeat threshold. Defines the minimum number of consecutive identical bases to be considered a mononucleotide SSR. Default: 10.",
+  mono: "Mononucleotide repeat threshold. Defines the minimum number of consecutive identical bases to be considered a mononucleotide SSR. Default: 12.",
   di: "Dinucleotide repeat threshold. Defines the minimum number of repeating two-base units (e.g., ATATAT) to be considered a dinucleotide SSR. Default: 6.",
   tri: "Trinucleotide repeat threshold. Defines the minimum number of repeating three-base units (e.g., AGCAGCAGC) to be considered a trinucleotide SSR. Default: 4.",
   tetra: "Tetranucleotide repeat threshold. Defines the minimum number of repeating four-base units to be considered a tetranucleotide SSR. Default: 3.",
-  penta: "Pentanucleotide repeat threshold. Defines the minimum number of repeating five-base units to be considered a pentanucleotide SSR. Default: 2.",
+  penta: "Pentanucleotide repeat threshold. Defines the minimum number of repeating five-base units to be considered a pentanucleotide SSR. Default: 3.",
   hexa: "Hexanucleotide repeat threshold. Defines the minimum number of repeating six-base units to be considered a hexanucleotide SSR. Default: 2.",
   minLen: "Minimum genome length for filtering. Genomes shorter than this value will be excluded from analysis. Default: 1000 bp.",
   maxLen: "Maximum genome length for filtering. Genomes longer than this value will be excluded from analysis. Default: 10,000,000 bp.",
@@ -310,8 +310,8 @@ function FieldInfo({ field }: { field: any }) {
   return (
     <>
       {field.state.meta.touchedErrors?.length > 0 ? (
-         <em className="text-xs text-red-500 pt-1 block">{field.state.meta.touchedErrors.join(', ')}</em>
-       ) : null}
+        <em className="text-xs text-red-500 pt-1 block">{field.state.meta.touchedErrors.join(', ')}</em>
+      ) : null}
     </>
   );
 }
@@ -329,7 +329,7 @@ interface DataTableProps<TData> {
 function formatLociAndLength(loci: string, lengths: string) {
   const lociArray = loci.split(':').map(l => l.trim());
   const lengthsArray = lengths.split(':').map(l => l.trim());
-  
+
   return lociArray.map((locus, index) => ({
     locus,
     length: lengthsArray[index] || 'N/A'
@@ -368,10 +368,10 @@ function DataTable<TData>({ data, columns, caption, tableName }: DataTableProps<
     const headers = table.getAllColumns()
       .filter(column => column.getIsVisible())
       .map(column => column.id);
-    
+
     const csvContent = [
       headers.join(','),
-      ...table.getFilteredRowModel().rows.map(row => 
+      ...table.getFilteredRowModel().rows.map(row =>
         headers.map(header => {
           const value = row.getValue(header);
           const stringValue = value === null || value === undefined ? '' : String(value);
@@ -401,10 +401,10 @@ function DataTable<TData>({ data, columns, caption, tableName }: DataTableProps<
     if (tableName === 'hotspot_data' && (columnId === 'loci' || columnId === 'length_of_ssr')) {
       const otherColumnId = columnId === 'loci' ? 'length_of_ssr' : 'loci';
       const otherValue = cell.row.getValue(otherColumnId);
-      
+
       if (columnId === 'loci') {
         const formattedData = formatLociAndLength(value, otherValue);
-        
+
         return (
           <Popover>
             <PopoverTrigger asChild>
@@ -430,7 +430,7 @@ function DataTable<TData>({ data, columns, caption, tableName }: DataTableProps<
           </Popover>
         );
       }
-      
+
       return (
         <Popover>
           <PopoverTrigger asChild>
@@ -500,7 +500,7 @@ function DataTable<TData>({ data, columns, caption, tableName }: DataTableProps<
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
+
         {/* Download Button */}
         <Button
           variant="outline"
@@ -645,11 +645,11 @@ function HomePage() {
 
   // Explicitly define default performance parameters
   const defaultPerfParams: PerfParams = {
-    mono: 10,
+    mono: 12,
     di: 6,
     tri: 4,
     tetra: 3,
-    penta: 2,
+    penta: 3,
     hexa: 2,
     minLen: 1000,
     maxLen: 10000000,
@@ -662,12 +662,12 @@ function HomePage() {
   // --- Form Initialization ---
   // Define the default values with the explicit type
   const defaultFormVals: FormDefaultValues = {
-      fasta_file: undefined,
-      categories_file: undefined,
-      gene_bed: undefined,
-      reference_id: '',
-      flanks: false,
-      perf_params: defaultPerfParams,
+    fasta_file: undefined,
+    categories_file: undefined,
+    gene_bed: undefined,
+    reference_id: '',
+    flanks: false,
+    perf_params: defaultPerfParams,
   };
 
   const form = useForm<
@@ -730,7 +730,7 @@ function HomePage() {
             try {
               const errorJson = JSON.parse(xhr.responseText);
               errorDetail = errorJson.detail || JSON.stringify(errorJson);
-            } catch (e) {}
+            } catch (e) { }
             reject(new Error(`Server error: ${xhr.status} - ${errorDetail}`));
           }
         };
@@ -744,13 +744,13 @@ function HomePage() {
       });
     },
     onMutate: () => {
-       toast.loading("Submitting analysis job...", { id: 'job-submission' });
-       setJobId(null); setJobUrls(null); setJobStatus(null); setJobMessage(null);
-       setJobProgress(null); setJobError(null); setSubmittedReferenceId(null); // Clear submitted ref ID on new submission
-       setUploadProgress(0);
-     },
-     onSuccess: (data: JobSubmissionSuccess) => { // Remove unused variables parameter
-       // Explicitly use only the 'data' parameter from onSuccess for job details
+      toast.loading("Submitting analysis job...", { id: 'job-submission' });
+      setJobId(null); setJobUrls(null); setJobStatus(null); setJobMessage(null);
+      setJobProgress(null); setJobError(null); setSubmittedReferenceId(null); // Clear submitted ref ID on new submission
+      setUploadProgress(0);
+    },
+    onSuccess: (data: JobSubmissionSuccess) => { // Remove unused variables parameter
+      // Explicitly use only the 'data' parameter from onSuccess for job details
       const newJobId = data.job_id;
       const initialStatus = data.status;
       const initialMessage = `Job submitted, initial status: ${initialStatus}`;
@@ -764,31 +764,31 @@ function HomePage() {
         };
       }
 
-       // Update state based ONLY on the 'data' parameter
-       setJobId(newJobId);
-       setJobStatus(initialStatus);
-       setJobMessage(initialMessage);
-       setJobUrls(newUrls);
-       // Store the reference_id from the *submitted* form values
-       // We need to get it from the submitted form data, which isn't directly passed here.
-       // A workaround is to read it from the form state *before* reset, assuming it hasn't changed.
-       // Or better, pass the submitted values to onSuccess if the library supports it.
-       // Let's assume we can access the submitted value via the form instance before reset.
-       const submittedValues = form.state.values; // Get values before reset
-       setSubmittedReferenceId(submittedValues.reference_id || null); // Store submitted ref ID
+      // Update state based ONLY on the 'data' parameter
+      setJobId(newJobId);
+      setJobStatus(initialStatus);
+      setJobMessage(initialMessage);
+      setJobUrls(newUrls);
+      // Store the reference_id from the *submitted* form values
+      // We need to get it from the submitted form data, which isn't directly passed here.
+      // A workaround is to read it from the form state *before* reset, assuming it hasn't changed.
+      // Or better, pass the submitted values to onSuccess if the library supports it.
+      // Let's assume we can access the submitted value via the form instance before reset.
+      const submittedValues = form.state.values; // Get values before reset
+      setSubmittedReferenceId(submittedValues.reference_id || null); // Store submitted ref ID
 
-       // Show toast based ONLY on the 'data' parameter
+      // Show toast based ONLY on the 'data' parameter
       toast.success(`Job ${newJobId} submitted! Initial Status: ${initialStatus}.`, { id: 'job-submission' });
 
       // Reset form
       form.reset();
-     },
-     onError: (error: any) => {
-       toast.error(`Submission failed: ${error.message || 'Unknown error'}`, { id: 'job-submission' });
-       setJobError(error.message || 'Submission failed');
-       setSubmittedReferenceId(null); // Clear submitted ref ID on error
-     },
-   });
+    },
+    onError: (error: any) => {
+      toast.error(`Submission failed: ${error.message || 'Unknown error'}`, { id: 'job-submission' });
+      setJobError(error.message || 'Submission failed');
+      setSubmittedReferenceId(null); // Clear submitted ref ID on error
+    },
+  });
 
 
   // --- TanStack Query: Job Status Polling ---
@@ -920,7 +920,7 @@ function HomePage() {
   const handleLoadDemoJob = () => {
     // Use a predefined demo job ID
     const demoJobId = DEMO_JOB_ID;
-    
+
     console.log(`Loading demo job: ${demoJobId}`);
     toast.info(`Loading demo analysis...`, { id: 'demo-load' });
 
@@ -958,16 +958,16 @@ function HomePage() {
   const handleLoadExample = async (exampleName: string) => {
     // Reset form state and show loading toast
     form.reset();
-    
+
     if (exampleName !== 'monkeypox') {
       toast.info(`Loading ${exampleName} example...`, { id: 'load-example' });
     } else {
       toast.info("Loading example dataset...", { id: 'load-example' });
     }
-    
+
     // Short delay to allow toast to show
     await new Promise(r => setTimeout(r, 500));
-    
+
     try {
       const filePaths = {
         fasta: '/sample/1.fa',
@@ -1035,7 +1035,7 @@ function HomePage() {
         if (!jobStatus || jobStatus !== 'completed' || !jobUrls?.resultsBase) {
           return { plotKey, data: null }; // Return null if prerequisites not met
         }
-        
+
         // For the demo job, use direct path without API_BASE_URL and use the correct filename
         const isDemo = jobId === DEMO_JOB_ID;
         let url: string;
@@ -1046,13 +1046,13 @@ function HomePage() {
             ? `${jobUrls.resultsBase}${plotKey}` // In dev, jobUrls.resultsBase already has /api, Vite handles it
             : `${API_BASE_URL}${jobUrls.resultsBase}${plotKey}`; // In prod, prepend full API_BASE_URL
         }
-        
+
         console.log(`Fetching ${plotKey} from ${url}`);
-        
+
         try {
           const resp = await fetch(url);
           if (resp.status === 204) { // Handle No Content
-             return { plotKey, data: [] }; // Empty array signifies no data
+            return { plotKey, data: [] }; // Empty array signifies no data
           }
           if (!resp.ok) {
             throw new Error(`Status ${resp.status}`);
@@ -1064,11 +1064,11 @@ function HomePage() {
             if (!text || text.trim() === '') {
               return { plotKey, data: [] }; // Empty text means no data
             }
-            
+
             // Determine delimiter based on file extension
             const isCSV = url.endsWith('.csv');
             const delimiter = isCSV ? ',' : '\t';
-            
+
             // Special handling for ssr_genecombo.tsv which has a problematic format
             if (plotKey === 'ssr_gene_intersect' || plotKey === 'gene_country_sankey') {
               // Clean up the file content
@@ -1076,24 +1076,24 @@ function HomePage() {
                 .replace(/\r\n/g, '\n')  // Normalize line endings
                 .replace(/\n\s+/g, ' ')  // Replace newlines with spaces if they're in the middle of data
                 .replace(/\s{2,}/g, ' '); // Reduce multiple spaces to single spaces
-              
+
               // Re-split into proper lines
               const lines = cleanedText.split('\n').filter(line => line.trim() !== '');
-              
+
               // Handle header - in these files, header columns are the important ones
               const headers = lines[0].split(delimiter).map(h => h.trim());
-              
+
               // Create a structured object for each row
               const data = [];
               for (let i = 1; i < lines.length; i++) {
                 const values = lines[i].split(delimiter).map(v => v.trim());
                 const row: { [key: string]: any } = {};
-                
+
                 // Map values to headers, ensuring no undefined values
                 headers.forEach((header, index) => {
                   row[header] = (index < values.length) ? values[index] : '';
                 });
-                
+
                 // Ensure required fields exist based on the plot type
                 if (plotKey === 'ssr_gene_intersect' && row['gene'] && row['ssr_position']) {
                   data.push(row);
@@ -1105,14 +1105,14 @@ function HomePage() {
                   data.push(row);
                 }
               }
-              
+
               return { plotKey, data };
             }
-            
+
             // Standard parsing for other files
             const lines = text.trim().split('\n');
             const headers = lines[0].split(delimiter).map(h => h.trim());
-            
+
             // Parse data rows
             const data = lines.slice(1).map(line => {
               const values = line.split(delimiter);
@@ -1122,14 +1122,14 @@ function HomePage() {
               });
               return row;
             });
-            
+
             return { plotKey, data };
           }
-          
+
           // For regular jobs, continue with Arrow format
           const buffer = await resp.arrayBuffer();
           if (buffer.byteLength === 0) {
-             return { plotKey, data: [] }; // Empty buffer means no data
+            return { plotKey, data: [] }; // Empty buffer means no data
           }
           const arrowTable = tableFromIPC(buffer);
           // Convert BigInts to strings for display if necessary
@@ -1151,18 +1151,18 @@ function HomePage() {
       // Add the select function only for the 'plot_source' key
       // select: plotKey === 'plot_source' ? selectRelativeAbundanceData : undefined, // Removed select
       retry: (failureCount: number, error: any) => {
-         // Don't retry on 404 (Not Found) or 204 (No Content implicitly handled)
-         if (error?.message?.includes('404')) return false;
-         return failureCount < 2; // Retry twice on other errors
+        // Don't retry on 404 (Not Found) or 204 (No Content implicitly handled)
+        if (error?.message?.includes('404')) return false;
+        return failureCount < 2; // Retry twice on other errors
       },
     })),
   });
 
   // Process query results into a map for easy access
   const queryResultsMap = plotDataQueries.reduce((acc, result, index) => {
-      const plotKey = PLOT_KEYS_TO_FETCH[index];
-      acc[plotKey] = result;
-      return acc;
+    const plotKey = PLOT_KEYS_TO_FETCH[index];
+    acc[plotKey] = result;
+    return acc;
   }, {} as Record<PlotKey, PlotQueryResult>); // Use PlotQueryResult type
 
   // Generate columns for tables dynamically based on fetched data
@@ -1178,13 +1178,13 @@ function HomePage() {
         acc[key] = { data, columns };
       }
       return acc;
-     }, {} as Record<PlotKey, { data: any[]; columns: ColumnDef<any>[] }>);
-   }, [queryResultsMap]); // Recompute when query results change
+    }, {} as Record<PlotKey, { data: any[]; columns: ColumnDef<any>[] }>);
+  }, [queryResultsMap]); // Recompute when query results change
 
 
 
-   // Determine if any plot data is available or loading
-   const plotSourceResult = queryResultsMap['plot_source'];
+  // Determine if any plot data is available or loading
+  const plotSourceResult = queryResultsMap['plot_source'];
   const geneCountrySankeyResult = queryResultsMap['gene_country_sankey'];
   const ssrGeneIntersectResult = queryResultsMap['ssr_gene_intersect'];
   const hotspotResult = queryResultsMap['hotspot'];
@@ -1218,434 +1218,439 @@ function HomePage() {
   const isAnyDataLoading = isPlotSourceLoading || isGeneCountrySankeyLoading || isSsrGeneIntersectLoading || isHotspotLoading || isHssrDataLoading;
 
 
-   // --- Render ---
-   return (
-     <div className="px-4 md:px-6 pt-12 md:pt-16 lg:pt-20 pb-8 md:pb-10 lg:pb-12"> {/* Increased top padding, kept bottom padding */}
-        <Toaster richColors position="top-center" />
+  // --- Render ---
+  return (
+    <div className="px-4 md:px-6 pt-12 md:pt-16 lg:pt-20 pb-8 md:pb-10 lg:pb-12"> {/* Increased top padding, kept bottom padding */}
+      <Toaster richColors position="top-center" />
 
-        {/* --- Header --- */}
-        {/* Removed the "Current File" heading */}
-       <motion.div
-         initial={{ opacity: 0, y: -20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.5 }}
-         className="mb-12 md:flex md:items-start md:justify-between" // Changed to items-start for better alignment with multi-line left content
-       >
+      {/* --- Header --- */}
+      {/* Removed the "Current File" heading */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-12 md:flex md:items-start md:justify-between" // Changed to items-start for better alignment with multi-line left content
+      >
         <div className="md:w-2/5 text-center md:text-left mb-6 md:mb-0"> {/* Left part - made smaller */}
           <h1 className="font-bold tracking-tighter text-3xl sm:text-4xl md:text-4xl lg:text-5xl"> {/* Adjusted font size slightly */}
             cro<span className="bg-gradient-to-r from-primary via-primary/75 to-primary/50 bg-clip-text text-transparent">SSR</span>road
           </h1>
-<h2 className="text-xl text-primary sm:text-2xl md:text-2xl lg:text-3xl font-semibold mt-1">
-  <WritingText
-    text="SSR Analysis Pipeline"
-    spacing={9}
-    transition={{ duration: 1, delay: 0.1 }}
-  />
-</h2>
+          <h2 className="text-xl text-primary sm:text-2xl md:text-2xl lg:text-3xl font-semibold mt-1">
+            <WritingText
+              text="SSR Analysis Pipeline"
+              spacing={9}
+              transition={{ duration: 1, delay: 0.1 }}
+            />
+          </h2>
         </div>
         <div className="md:w-3/5 text-center md:text-left md:pl-8"> {/* Right part - adjusted width and padding */}
           <WritingText
-           text="Analyze Simple Sequence Repeats (SSRs), compare across genomes, identify hotspots, and trace evolutionary patterns."
-           className="max-w-[700px] text-foreground font-bold text-sm md:text-base lg:text-lg leading-relaxed"
-           transition={{ duration: 1, delay: 0.1 }} // Adjust transition as needed
-           spacing={4} // Adjust spacing between words
-         />
+            text="Analyze Simple Sequence Repeats (SSRs), compare across genomes, identify hotspots, and trace evolutionary patterns."
+            className="max-w-[700px] text-foreground font-bold text-sm md:text-base lg:text-lg leading-relaxed"
+            transition={{ duration: 1, delay: 0.1 }} // Adjust transition as needed
+            spacing={4} // Adjust spacing between words
+          />
         </div>
       </motion.div>
 
-        {/* --- Form & Guide Section (Two Columns) --- */}
-       <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.5 }}
-         className="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start" // Changed to 3 columns for better layout
-       >
-         {/* --- Left Column: New Analysis Form --- */}
-         <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); form.handleSubmit(); }} className="lg:col-span-2 space-y-6"> {/* Form spans 2 columns */}
-            <h2 className="text-2xl font-semibold tracking-tight border-b pb-2">New Analysis</h2>
+      {/* --- Form & Guide Section (Two Columns) --- */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start" // Changed to 3 columns for better layout
+      >
+        {/* --- Left Column: New Analysis Form --- */}
+        <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); form.handleSubmit(); }} className="lg:col-span-2 space-y-6"> {/* Form spans 2 columns */}
+          <h2 className="text-2xl font-semibold tracking-tight border-b pb-2">New Analysis</h2>
 
-           {/* File Inputs Card */}
-            <Card className="backdrop-blur-md bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-green-900/30 dark:via-gray-950 dark:to-green-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
-              <CardHeader className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <FileIcon className="mr-2 h-5 w-5" /> Upload Your Data
-                  </CardTitle>
-                  <CardDescription>
-                    Provide the required FASTA file and optional metadata.
-                  </CardDescription>
-                </div>
-                <ExampleFilesDrawer
-                  onLoadExample={handleLoadExample}
-                  onLoadDemo={handleLoadDemoJob}
-                >
-                  <FlipButton
-                    frontText="How to Format?"
-                    backText="See Examples"
-                    className="w-full sm:w-auto"
+          {/* File Inputs Card */}
+          <Card className="backdrop-blur-md bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-green-900/30 dark:via-gray-950 dark:to-green-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+            <CardHeader className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <FileIcon className="mr-2 h-5 w-5" /> Upload Your Data
+                </CardTitle>
+                <CardDescription>
+                  Provide the required FASTA file and optional metadata.
+                </CardDescription>
+              </div>
+              <ExampleFilesDrawer
+                onLoadExample={handleLoadExample}
+                onLoadDemo={handleLoadDemoJob}
+              >
+                <FlipButton
+                  frontText="How to Format?"
+                  backText="See Examples"
+                  className="w-full sm:w-auto px-6 rounded-full"
+                  frontClassName="bg-emerald-600 text-white dark:bg-emerald-500 font-bold rounded-full"
+                  backClassName="bg-white text-emerald-600 border-2 border-emerald-600 dark:bg-gray-900 dark:text-emerald-400 dark:border-emerald-500 font-bold rounded-full"
+                />
+              </ExampleFilesDrawer>
+            </CardHeader>
+            <CardContent className="space-y-3 py-3"> {/* Reduced vertical padding and space between items */}
+              {/* FASTA File */}
+              <form.Field name="fasta_file">{(field) => (
+                <div className="space-y-1"> {/* Reduced space */}
+                  <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">FASTA File <span className="text-red-500">*</span></Label>
+                  <FastaFileUpload
+                    onChange={(files) => {
+                      if (files) {
+                        const dataTransfer = new DataTransfer();
+                        files.forEach(f => dataTransfer.items.add(f));
+                        field.handleChange(dataTransfer.files);
+                      } else {
+                        field.handleChange(undefined);
+                      }
+                    }}
+                    onGenomeCountChange={(count: number) => {
+                      console.log("Final genome count:", count);
+                    }}
+                    accept=".fa,.fasta"
+                    required={true}
+                    title="Upload FASTA File"
+                    description="Provide your genomic sequences"
+                    fileTypeHint="fasta"
+                    uploadProgress={uploadProgress}
                   />
-                </ExampleFilesDrawer>
-              </CardHeader>
-              <CardContent className="space-y-3 py-3"> {/* Reduced vertical padding and space between items */}
-                 {/* FASTA File */}
-                 <form.Field name="fasta_file">{(field) => (
-                   <div className="space-y-1"> {/* Reduced space */}
-                     <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">FASTA File <span className="text-red-500">*</span></Label>
-                     <FastaFileUpload
-                        onChange={(files) => {
-                          if (files) {
-                            const dataTransfer = new DataTransfer();
-                            files.forEach(f => dataTransfer.items.add(f));
-                            field.handleChange(dataTransfer.files);
-                          } else {
-                            field.handleChange(undefined);
-                          }
-                        }}
-                        onGenomeCountChange={(count: number) => {
-                          console.log("Final genome count:", count);
-                        }}
-                        accept=".fa,.fasta"
-                        required={true}
-                        title="Upload FASTA File"
-                        description="Provide your genomic sequences"
-                        fileTypeHint="fasta"
-                        uploadProgress={uploadProgress}
-                      />
-                     <FieldInfo field={field} />
-                   </div>
-                 )}</form.Field>
+                  <FieldInfo field={field} />
+                </div>
+              )}</form.Field>
 
-                 {/* Optional Files in a Grid */}
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"> {/* Reduced gap and padding-top */}
-                   {/* Categories File */}
-                   <form.Field name="categories_file">{(field) => (
-                     <div className="space-y-1"> {/* Reduced space */}
-                       <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Categories File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                       <FileUpload
-                         onChange={(files) => {
-                           const dataTransfer = new DataTransfer();
-                           if (files && files.length > 0) {
-                             files.forEach(file => dataTransfer.items.add(file));
-                           }
-                           field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
-                         }}
-                         accept={ACCEPTED_TSV_EXTENSIONS.join(',')}
-                         required={false}
-                         title="Categories File (.tsv)"
-                         description="Optional metadata"
-                         fileTypeHint="tsv"
-                         uploadProgress={uploadProgress}
-                       />
-                       <FieldInfo field={field} />
-                     </div>
-                   )}</form.Field>
-
-                   {/* Gene BED File */}
-                   <form.Field name="gene_bed">{(field) => (
-                     <div className="space-y-1"> {/* Reduced space */}
-                       <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Gene BED File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                       <FileUpload
-                         onChange={(files) => {
-                           const dataTransfer = new DataTransfer();
-                           if (files && files.length > 0) {
-                             files.forEach(file => dataTransfer.items.add(file));
-                           }
-                           field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
-                         }}
-                         accept={ACCEPTED_BED_EXTENSIONS.join(',')}
-                         required={false}
-                         title="Gene BED File (.bed)"
-                         description="Optional annotations"
-                         fileTypeHint="bed"
-                         uploadProgress={uploadProgress}
-                       />
-                       <FieldInfo field={field} />
-                     </div>
-                   )}</form.Field>
-                 </div>
-               </CardContent>
-            </Card>
-
-           {/* Other Options Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-              <Card className="backdrop-blur-md bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-purple-900/30 dark:via-gray-950 dark:to-purple-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-center"><Settings2 className="mr-2 h-5 w-5" /> Analysis Configuration</CardTitle>
-                  <CardDescription>Fine-tune analysis parameters for SSR identification and filtering.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Reference ID */}
-                    <form.Field name="reference_id">{(field) => (
-                      <div className="space-y-1.5">
-                        <Label htmlFor={field.name} className="text-sm font-medium text-gray-700 dark:text-gray-300">Reference ID <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                        <p className="text-xs text-muted-foreground">ID from your FASTA file for reference-specific plots (e.g., gene distribution).</p>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value ?? ''}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder="e.g., NC_063383.1"
-                        />
-                        <FieldInfo field={field} />
-                      </div>
-                    )}</form.Field>
-
-                    {/* Flanks Toggle */}
-                    <form.Field name="flanks">{(field) => (
-                      <div className="flex items-center justify-between p-3 border border-gray-200/80 dark:border-gray-800/70 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all hover:border-primary/40 h-full">
-                        <div className="space-y-0.5">
-                          <Label htmlFor={field.name} className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                            Include Flanking Regions
-                            <Badge variant="outline" className="ml-2">Beta</Badge>
-                          </Label>
-                          <p className="text-xs text-muted-foreground">Analyze regions surrounding SSRs for conservation. Toggle coming soon.</p>
-                        </div>
-                        <Switch
-                          id={field.name}
-                          aria-label="Toggle flanking regions"
-                          checked={field.state.value}
-                          onCheckedChange={(checked: boolean) => field.handleChange(checked)}
-                          disabled
-                        />
-                      </div>
-                    )}</form.Field>
+              {/* Optional Files in a Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"> {/* Reduced gap and padding-top */}
+                {/* Categories File */}
+                <form.Field name="categories_file">{(field) => (
+                  <div className="space-y-1"> {/* Reduced space */}
+                    <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Categories File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                    <FileUpload
+                      onChange={(files) => {
+                        const dataTransfer = new DataTransfer();
+                        if (files && files.length > 0) {
+                          files.forEach(file => dataTransfer.items.add(file));
+                        }
+                        field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
+                      }}
+                      accept={ACCEPTED_TSV_EXTENSIONS.join(',')}
+                      required={false}
+                      title="Categories File (.tsv)"
+                      description="Optional metadata"
+                      fileTypeHint="tsv"
+                      uploadProgress={uploadProgress}
+                    />
+                    <FieldInfo field={field} />
                   </div>
+                )}</form.Field>
 
-                  
-                  {/* PERF Parameters Accordion */}
-                  <Accordion type="single" collapsible className="w-full" defaultValue="perf-params">
-                    <AccordionItem value="perf-params" className="border border-gray-200/80 dark:border-gray-800/70 rounded-lg overflow-hidden bg-gray-50/30 dark:bg-gray-900/30">
-                      <AccordionTrigger className="px-4 py-2.5 text-sm font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
-                        <div className="flex items-center gap-2">
-                          <GitBranch className="h-4 w-4" />
-                          <span>Custom Advanced Parameters (PERF)</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pt-4 pb-4 border-t border-gray-200/80 dark:border-gray-800/70 bg-white/50 dark:bg-gray-950/50">
-                        <p className="text-xs text-muted-foreground mb-4">
-                          Set the minimum repeat counts for different SSR motif types (mono-, di-, tri-nucleotides, etc.). These values determine which sequences are identified as SSRs.
-                        </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
-                          {(Object.keys(defaultPerfParams) as Array<keyof PerfParams>).map((key) => (
-                            <form.Field key={key} name={`perf_params.${key}`}>
-                              {(field) => (
-                                <div className="space-y-2">
-                                  <div className="flex items-center space-x-1.5">
-                                    <Label htmlFor={field.name} className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
-                                      {key.replace(/_/g, ' ')}
-                                    </Label>
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-primary rounded-full">
-                                          <Info className="h-3 w-3" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent
-                                        className="w-64 bg-blue-50 dark:bg-blue-800 border-blue-200 dark:border-blue-700 p-3 shadow-lg rounded-md"
-                                        side="top"
-                                        align="center"
-                                      >
-                                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-200">
-                                          {perfParamDescriptions[key as keyof PerfParams] || "No description available."}
-                                        </p>
-                                      </PopoverContent>
-                                    </Popover>
-                                  </div>
-                                  <Counter
-                                    number={Number(field.state.value) || 0}
-                                    setNumber={(num) => field.handleChange(num)}
-                                    buttonProps={{ className: 'h-7 w-7 text-lg' }}
-                                    slidingNumberProps={{ className: 'text-base font-medium' }}
-                                  />
-                                  <FieldInfo field={field} />
+                {/* Gene BED File */}
+                <form.Field name="gene_bed">{(field) => (
+                  <div className="space-y-1"> {/* Reduced space */}
+                    <Label htmlFor={field.name} className="text-xs font-medium text-gray-700 dark:text-gray-300">Gene BED File <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                    <FileUpload
+                      onChange={(files) => {
+                        const dataTransfer = new DataTransfer();
+                        if (files && files.length > 0) {
+                          files.forEach(file => dataTransfer.items.add(file));
+                        }
+                        field.handleChange(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
+                      }}
+                      accept={ACCEPTED_BED_EXTENSIONS.join(',')}
+                      required={false}
+                      title="Gene BED File (.bed)"
+                      description="Optional annotations"
+                      fileTypeHint="bed"
+                      uploadProgress={uploadProgress}
+                    />
+                    <FieldInfo field={field} />
+                  </div>
+                )}</form.Field>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Other Options Card */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+            <Card className="backdrop-blur-md bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-purple-900/30 dark:via-gray-950 dark:to-purple-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+              <CardHeader>
+                <CardTitle className="text-lg font-medium flex items-center"><Settings2 className="mr-2 h-5 w-5" /> Analysis Configuration</CardTitle>
+                <CardDescription>Fine-tune analysis parameters for SSR identification and filtering.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Reference ID */}
+                  <form.Field name="reference_id">{(field) => (
+                    <div className="space-y-1.5">
+                      <Label htmlFor={field.name} className="text-sm font-medium text-gray-700 dark:text-gray-300">Reference ID <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                      <p className="text-xs text-muted-foreground">ID from your FASTA file for reference-specific plots (e.g., gene distribution).</p>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value ?? ''}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="e.g., NC_063383.1"
+                      />
+                      <FieldInfo field={field} />
+                    </div>
+                  )}</form.Field>
+
+                  {/* Flanks Toggle */}
+                  <form.Field name="flanks">{(field) => (
+                    <div className="flex items-center justify-between p-3 border border-gray-200/80 dark:border-gray-800/70 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all hover:border-primary/40 h-full">
+                      <div className="space-y-0.5">
+                        <Label htmlFor={field.name} className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                          Include Flanking Regions
+                          <Badge variant="outline" className="ml-2">Beta</Badge>
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Analyze regions surrounding SSRs for conservation. Toggle coming soon.</p>
+                      </div>
+                      <Switch
+                        id={field.name}
+                        aria-label="Toggle flanking regions"
+                        checked={field.state.value}
+                        onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                        disabled
+                      />
+                    </div>
+                  )}</form.Field>
+                </div>
+
+
+                {/* PERF Parameters Accordion */}
+                <Accordion type="single" collapsible className="w-full" defaultValue="perf-params">
+                  <AccordionItem value="perf-params" className="border border-gray-200/80 dark:border-gray-800/70 rounded-lg overflow-hidden bg-gray-50/30 dark:bg-gray-900/30">
+                    <AccordionTrigger className="px-4 py-2.5 text-sm font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
+                      <div className="flex items-center gap-2">
+                        <GitBranch className="h-4 w-4" />
+                        <span>Custom Advanced Parameters (PERF)</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pt-4 pb-4 border-t border-gray-200/80 dark:border-gray-800/70 bg-white/50 dark:bg-gray-950/50">
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Set the minimum repeat counts for different SSR motif types (mono-, di-, tri-nucleotides, etc.). These values determine which sequences are identified as SSRs.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
+                        {(Object.keys(defaultPerfParams) as Array<keyof PerfParams>).map((key) => (
+                          <form.Field key={key} name={`perf_params.${key}`}>
+                            {(field) => (
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-1.5">
+                                  <Label htmlFor={field.name} className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
+                                    {key.replace(/_/g, ' ')}
+                                  </Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-primary rounded-full">
+                                        <Info className="h-3 w-3" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-64 bg-blue-50 dark:bg-blue-800 border-blue-200 dark:border-blue-700 p-3 shadow-lg rounded-md"
+                                      side="top"
+                                      align="center"
+                                    >
+                                      <p className="text-xs font-semibold text-blue-700 dark:text-blue-200">
+                                        {perfParamDescriptions[key as keyof PerfParams] || "No description available."}
+                                      </p>
+                                    </PopoverContent>
+                                  </Popover>
                                 </div>
-                              )}
-                            </form.Field>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </Card>
-            </motion.div>
-         </form>
-
-         {/* --- Right Column: Guide & Load Job --- */}
-         <div className="lg:col-span-1 space-y-6 sticky top-20"> {/* Sticky positioning */}
-           {/* Guide Banner */}
-            <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-blue-900/30 dark:via-gray-950 dark:to-blue-900/30 border border-blue-200/60 dark:border-blue-800/60 shadow-sm rounded-xl">
-               <CardHeader>
-                 <CardTitle className="text-lg font-medium flex items-center text-blue-800 dark:text-blue-300"><Info className="mr-2 h-5 w-5" /> Quick Guide</CardTitle>
-               </CardHeader>
-               <CardContent className="space-y-2 text-sm text-blue-700 dark:text-blue-400">
-                 <p>1. Upload your <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.fasta</code> file (required).</p>
-                 <p>2. Optionally, provide <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.tsv</code> categories or <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.bed</code> gene annotations.</p>
-                 <p>3. Set a Reference ID if you need reference-specific visualizations.</p>
-                 <p>4. Adjust advanced parameters if needed, or use the defaults.</p>
-                 <p>5. Click "Submit Job"!</p>
-               </CardContent>
-               <CardFooter>
-                 {/* Tutorial link */}
-                  <GuideDrawer>
-                    <Button variant="outline" size="sm" className="w-full border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-900/50">
-                      <BookOpen className="mr-2 h-4 w-4" /> View Full Tutorial
-                    </Button>
-                  </GuideDrawer>
-               </CardFooter>
+                                <Counter
+                                  number={Number(field.state.value) || 0}
+                                  setNumber={(num) => field.handleChange(num)}
+                                  buttonProps={{ className: 'h-7 w-7 text-lg' }}
+                                  slidingNumberProps={{ className: 'text-base font-medium' }}
+                                />
+                                <FieldInfo field={field} />
+                              </div>
+                            )}
+                          </form.Field>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
             </Card>
+          </motion.div>
+        </form>
 
-            <form.Subscribe selector={(state) => [state.canSubmit, state.isValid, state.isValidating]}>
-              {([canSubmit, isValid, isValidating]) => {
-                const buttonText = () => {
-                  if (submitMutation.isPending || isValidating) return "Submitting...";
-                  if (jobStatus === 'completed') return "Job Completed";
-                  if (jobStatus === 'running') return "Job Running...";
-                  if (jobStatus === 'failed') return "Job Failed, Resubmit?";
-                  return "Submit Job";
-                };
+        {/* --- Right Column: Guide & Load Job --- */}
+        <div className="lg:col-span-1 space-y-6 sticky top-20"> {/* Sticky positioning */}
+          {/* Guide Banner */}
+          <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-blue-900/30 dark:via-gray-950 dark:to-blue-900/30 border border-blue-200/60 dark:border-blue-800/60 shadow-sm rounded-xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium flex items-center text-blue-800 dark:text-blue-300"><Info className="mr-2 h-5 w-5" /> Quick Guide</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-blue-700 dark:text-blue-400">
+              <p>1. Upload your <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.fasta</code> file (required).</p>
+              <p>2. Optionally, provide <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.tsv</code> categories or <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 py-0.5 rounded text-xs">.bed</code> gene annotations.</p>
+              <p>3. Set a Reference ID if you need reference-specific visualizations.</p>
+              <p>4. Adjust advanced parameters if needed, or use the defaults.</p>
+              <p>5. Click "Submit Job"!</p>
+            </CardContent>
+            <CardFooter>
+              {/* Tutorial link */}
+              <GuideDrawer>
+                <Button variant="outline" size="sm" className="w-full border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-900/50">
+                  <BookOpen className="mr-2 h-4 w-4" /> View Full Tutorial
+                </Button>
+              </GuideDrawer>
+            </CardFooter>
+          </Card>
 
-                const showLoader = submitMutation.isPending || isValidating || jobStatus === 'running';
+          <form.Subscribe selector={(state) => [state.canSubmit, state.isValid, state.isValidating]}>
+            {([canSubmit, isValid, isValidating]) => {
+              const buttonText = () => {
+                if (submitMutation.isPending || isValidating) return "Submitting...";
+                if (jobStatus === 'completed') return "Job Completed";
+                if (jobStatus === 'running') return "Job Running...";
+                if (jobStatus === 'failed') return "Job Failed, Resubmit?";
+                return "Submit Job";
+              };
 
-                return (
-                  <div className="space-y-4">
-                    <LiquidButton
-                      onClick={() => form.handleSubmit()}
-                      disabled={!isValid || !canSubmit || submitMutation.isPending || isValidating || (!!jobId && jobStatus !== 'failed')}
-                      className="w-full"
-                      size="lg"
-                      variant="invert"
-                    >
-                      {showLoader ? (
-                        <div className="flex items-center justify-center">
-                          <Loader text={buttonText()} className="scale-50" />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          {buttonText()} <Sparkles className="ml-2 h-5 w-5" />
-                        </div>
-                      )}
-                    </LiquidButton>
+              const showLoader = submitMutation.isPending || isValidating || jobStatus === 'running';
 
-                    {jobId && (
-                      <div className="text-center bg-muted/50 p-3 rounded-lg">
-                        <Label className="text-xs text-muted-foreground">Last Submitted Job ID</Label>
-                        <div className="flex items-center justify-center gap-2 mt-1">
-                          <code className="font-mono text-sm bg-background px-2 py-1 rounded-md shadow-inner">{jobId}</code>
-                          <CopyButton content={jobId} size="sm" variant="ghost" />
-                        </div>
+              return (
+                <div className="space-y-4">
+                  <LiquidButton
+                    onClick={() => form.handleSubmit()}
+                    disabled={!isValid || !canSubmit || submitMutation.isPending || isValidating || (!!jobId && jobStatus !== 'failed')}
+                    className="w-full"
+                    size="lg"
+                    variant="invert"
+                  >
+                    {showLoader ? (
+                      <div className="flex items-center justify-center">
+                        <Loader text={buttonText()} className="scale-50" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        {buttonText()} <Sparkles className="ml-2 h-5 w-5" />
                       </div>
                     )}
-                  </div>
-                );
-              }}
-            </form.Subscribe>
+                  </LiquidButton>
 
-           {/* Load Previous Job */}
-            <Card className="backdrop-blur-md bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900/30 dark:via-gray-950 dark:to-slate-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
-               <CardHeader>
-                 <CardTitle className="text-lg font-medium flex items-center"><History className="mr-2 h-5 w-5" /> Load Previous Job</CardTitle>
-                 <CardDescription>Enter a Job ID to retrieve past results or try a demo.</CardDescription>
-               </CardHeader>
-               <CardContent className="space-y-4">
-                 <div className="flex flex-col sm:flex-row items-stretch gap-3">
-                   <Label htmlFor="previous-job-id" className="sr-only">Previous Job ID</Label>
-                   <Input
-                     id="previous-job-id"
-                     placeholder="Enter Job ID..."
-                     value={previousJobIdInput}
-                     onChange={(e) => setPreviousJobIdInput(e.target.value)}
-                     className="flex-grow border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md h-9 text-sm shadow-inner"
-                     onKeyDown={(e) => { if (e.key === 'Enter') handleLoadPreviousJob(); }}
-                   />
-                   <Button onClick={handleLoadPreviousJob} disabled={!previousJobIdInput.trim() || submitMutation.isPending || (jobId === previousJobIdInput.trim() && jobStatus !== 'failed')} variant="secondary" className="rounded-md px-4 py-2 text-sm font-medium shadow-sm">
-                     <Search className="mr-1.5 h-4 w-4" /> Load Job
-                   </Button>
-                 </div>
-                 
-                 <div className="flex items-center justify-center">
-                   <Button 
-                     onClick={handleLoadDemoJob} 
-                     disabled={submitMutation.isPending || (jobId === DEMO_JOB_ID && jobStatus === 'completed')}
-                     variant="outline"
-                     className="w-full bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-indigo-200 dark:border-indigo-800/60 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/40 dark:hover:to-blue-900/40 transition-all"
-                   >
-                     <Database className="mr-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                     Load Demo Analysis
-                   </Button>
-                 </div>
-               </CardContent>
-            </Card>
-         </div>
-       </motion.div>
+                  {jobId && (
+                    <div className="text-center bg-muted/50 p-3 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">Last Submitted Job ID</Label>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <code className="font-mono text-sm bg-background px-2 py-1 rounded-md shadow-inner">{jobId}</code>
+                        <CopyButton content={jobId} size="sm" variant="ghost" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          </form.Subscribe>
 
-       {/* --- Job Status & Results Section --- */}
-       {jobId && (
-         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mt-16"> {/* Added more top margin */}
-           <Card className="border border-gray-200/60 dark:border-gray-800/60 shadow-lg rounded-xl overflow-hidden"> {/* Enhanced card styling */}
-             <CardHeader className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200/60 dark:border-gray-800/60 p-4">
-               <div className="flex items-center justify-between">
-                 <CardTitle className="text-xl">Job Status</CardTitle>
-                 <Badge variant={jobStatus === 'completed' ? 'default' : jobStatus === 'failed' ? 'destructive' : 'secondary'}>{jobStatus || 'Initializing...'}</Badge>
-               </div>
-               <div className="flex items-center gap-2 pt-2">
-                 <code className="font-mono text-base break-all bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{jobId}</code>
-                 <CopyButton content={jobId} size="sm" variant="outline" />
-               </div>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {/* Progress Bar and Message */}
-               <div>
-                 <p className="text-sm text-muted-foreground mb-2">{jobMessage || (jobId ? 'Fetching status...' : 'Waiting for status...')}</p>
-                 {(jobStatus === 'running' || jobStatus === 'queued') && jobProgress !== null && (<Progress value={jobProgress * 100} className="w-full h-2" />)}
-               </div>
-               {/* Error Display */}
-               {jobStatus === 'failed' && (<Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Job Failed</AlertTitle><AlertDescription>{jobError || 'Unknown error'}</AlertDescription></Alert>)}
-               {/* Results Controls */}
-               {jobStatus === 'completed' && jobUrls && (
-                 <div className="space-y-4 pt-4">
-                    <Separator />
-                    <p className="font-semibold text-lg">Results</p>
-                    <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(
-                      import.meta.env.DEV ? jobUrls.downloadAll : `${API_BASE_URL}${jobUrls.downloadAll}`,
-                      '_blank'
-                    )} disabled={!jobUrls?.downloadAll}>
-                        <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
-                      </Button>
-                    {/* --- Results Structure with Tabs --- */}
-                    <div className="mt-6 space-y-8"> {/* Increased spacing */}
-                      
-                      {/* Catchy phrase while loading */}
-                      {isAnyDataLoading && (
-                        <div className="flex justify-center py-8">
-                          <TextShine text="Unraveling genetic secrets, one sequence at a time..." />
-                        </div>
-                      )}
+          {/* Load Previous Job */}
+          <Card className="backdrop-blur-md bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900/30 dark:via-gray-950 dark:to-slate-900/30 border border-gray-200/60 dark:border-gray-800/60 shadow-sm rounded-xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium flex items-center"><History className="mr-2 h-5 w-5" /> Load Previous Job</CardTitle>
+              <CardDescription>Enter a Job ID to retrieve past results or try a demo.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                <Label htmlFor="previous-job-id" className="sr-only">Previous Job ID</Label>
+                <Input
+                  id="previous-job-id"
+                  placeholder="Enter Job ID..."
+                  value={previousJobIdInput}
+                  onChange={(e) => setPreviousJobIdInput(e.target.value)}
+                  className="flex-grow border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all hover:border-primary/40 rounded-md h-9 text-sm shadow-inner"
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleLoadPreviousJob(); }}
+                />
+                <Button
+                  onClick={handleLoadDemoJob}
+                  disabled={submitMutation.isPending || (jobId === DEMO_JOB_ID && jobStatus === 'completed')}
+                  variant="secondary"
+                  className="rounded-md px-4 py-2 text-sm font-medium shadow-sm"
+                >
+                  <Database className="mr-1.5 h-4 w-4" /> Load Demo Analysis
+                </Button>
+              </div>
 
-                      <Tabs defaultValue="core_data" className="w-full bg-muted rounded-lg">
-                        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
-                          <TabsTrigger value="core_data">Core Data & Plots</TabsTrigger>
-                          <TabsTrigger value="ssr_gene_intersection">SSR-Gene Intersection</TabsTrigger>
-                          <TabsTrigger value="hotspot_data">Hotspot Data & Plot</TabsTrigger>
-                          <TabsTrigger value="hssr_data">HSSR Data & Plots</TabsTrigger>
-                        </TabsList>
+              <div className="flex items-center justify-center">
+                <Button
+                  onClick={handleLoadPreviousJob}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-400 font-bold transition-all shadow-md active:scale-[0.98]"
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Load Previous Job
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </motion.div>
 
-                        <TabsContents className="mx-1 mb-1 -mt-2 rounded-sm h-full bg-background">
+      {/* --- Job Status & Results Section --- */}
+      {jobId && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mt-16"> {/* Added more top margin */}
+          <Card className="border border-gray-200/60 dark:border-gray-800/60 shadow-lg rounded-xl overflow-hidden"> {/* Enhanced card styling */}
+            <CardHeader className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200/60 dark:border-gray-800/60 p-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Job Status</CardTitle>
+                <Badge variant={jobStatus === 'completed' ? 'default' : jobStatus === 'failed' ? 'destructive' : 'secondary'}>{jobStatus || 'Initializing...'}</Badge>
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <code className="font-mono text-base break-all bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{jobId}</code>
+                <CopyButton content={jobId} size="sm" variant="outline" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Progress Bar and Message */}
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">{jobMessage || (jobId ? 'Fetching status...' : 'Waiting for status...')}</p>
+                {(jobStatus === 'running' || jobStatus === 'queued') && jobProgress !== null && (<Progress value={jobProgress * 100} className="w-full h-2" />)}
+              </div>
+              {/* Error Display */}
+              {jobStatus === 'failed' && (<Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Job Failed</AlertTitle><AlertDescription>{jobError || 'Unknown error'}</AlertDescription></Alert>)}
+              {/* Results Controls */}
+              {jobStatus === 'completed' && jobUrls && (
+                <div className="space-y-4 pt-4">
+                  <Separator />
+                  <p className="font-semibold text-lg">Results</p>
+                  <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(
+                    import.meta.env.DEV ? jobUrls.downloadAll : `${API_BASE_URL}${jobUrls.downloadAll}`,
+                    '_blank'
+                  )} disabled={!jobUrls?.downloadAll}>
+                    <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
+                  </Button>
+                  {/* --- Results Structure with Tabs --- */}
+                  <div className="mt-6 space-y-8"> {/* Increased spacing */}
+
+                    {/* Catchy phrase while loading */}
+                    {isAnyDataLoading && (
+                      <div className="flex justify-center py-8">
+                        <TextShine text="Unraveling genetic secrets, one sequence at a time..." />
+                      </div>
+                    )}
+
+                    <Tabs defaultValue="core_data" className="w-full bg-muted/50 dark:bg-muted/20 rounded-lg p-1">
+                      <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-muted/20 dark:bg-muted/10 p-1" activeClassName="bg-primary shadow-md rounded-md">
+                        <TabsTrigger value="core_data" className="text-foreground/70 data-[state=active]:text-white font-bold transition-colors">Core Data & Plots</TabsTrigger>
+                        <TabsTrigger value="ssr_gene_intersection" className="text-foreground/70 data-[state=active]:text-white font-bold transition-colors">SSR-Gene Intersection</TabsTrigger>
+                        <TabsTrigger value="hotspot_data" className="text-foreground/70 data-[state=active]:text-white font-bold transition-colors">Hotspot Data & Plot</TabsTrigger>
+                        <TabsTrigger value="hssr_data" className="text-foreground/70 data-[state=active]:text-white font-bold transition-colors">HSSR Data & Plots</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContents className="mx-1 mb-1 -mt-2 rounded-sm h-full bg-background">
                         <TabsContent value="core_data" className="space-y-4">
                           {isPlotSourceLoading ? <TabContentSkeleton /> : isPlotSourceAvailable && availableTableData['plot_source'] ? (
                             <>
                               <Tabs defaultValue="category_country_sankey" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4">
-                                  <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5">Cat → Country</TabsTrigger>
-                                  <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5">SSR GC Dist.</TabsTrigger>
-                                  <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5">Motif Conserv.</TabsTrigger>
-                                  <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5">SSR Conserv.</TabsTrigger>
-                                  <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5">UpSet Plot</TabsTrigger>
-                                  <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5">Rel. Abundance</TabsTrigger>
-                                  <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5">Rel. Density</TabsTrigger>
-                                  <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5">Motif Heatmap</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-8 mb-4 bg-muted/20 dark:bg-muted/10 p-1" activeClassName="bg-primary shadow-sm rounded-md">
+                                  <TabsTrigger value="category_country_sankey" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Cat → Country</TabsTrigger>
+                                  <TabsTrigger value="ssr_gc_distribution" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">SSR GC Dist.</TabsTrigger>
+                                  <TabsTrigger value="motif_conservation" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Motif Conserv.</TabsTrigger>
+                                  <TabsTrigger value="ssr_conservation" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">SSR Conserv.</TabsTrigger>
+                                  <TabsTrigger value="upset_plot" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">UpSet Plot</TabsTrigger>
+                                  <TabsTrigger value="relative_abundance" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Rel. Abundance</TabsTrigger>
+                                  <TabsTrigger value="relative_density" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Rel. Density</TabsTrigger>
+                                  <TabsTrigger value="motif_distribution_heatmap" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Motif Heatmap</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="category_country_sankey"><CategoryCountrySankeyPlot queryResult={plotSourceResult} /></TabsContent>
                                 <TabsContent value="ssr_gc_distribution"><SsrGcDistributionPlot queryResult={plotSourceResult} /></TabsContent>
@@ -1673,9 +1678,9 @@ function HomePage() {
                           {isSsrGeneIntersectLoading ? <TabContentSkeleton /> : isSsrGeneIntersectAvailable && availableTableData['ssr_gene_intersect'] ? (
                             <>
                               <Tabs defaultValue="ssr_gene_intersect" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 mb-4">
-                                  <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5">Intersection Plot</TabsTrigger>
-                                  <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/20 dark:bg-muted/10 p-1" activeClassName="bg-primary shadow-sm rounded-md">
+                                  <TabsTrigger value="ssr_gene_intersect" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Intersection Plot</TabsTrigger>
+                                  <TabsTrigger value="ref_ssr_dist" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors" disabled={!submittedReferenceId}>Ref. SSR Dist.</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="ssr_gene_intersect"><SsrGeneIntersectionPlot queryResult={ssrGeneIntersectResult} /></TabsContent>
                                 <TabsContent value="ref_ssr_dist">
@@ -1724,10 +1729,10 @@ function HomePage() {
                           {isHssrDataLoading ? <TabContentSkeleton /> : isHssrDataAvailable && availableTableData['hssr_data'] ? (
                             <>
                               <Tabs defaultValue="gene_country_sankey" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 mb-4">
-                                  <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5">Gene → Country</TabsTrigger>
-                                  <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5">Temporal Dist.</TabsTrigger>
-                                  <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5">SSR Dot Plot</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/20 dark:bg-muted/10 p-1" activeClassName="bg-primary shadow-sm rounded-md">
+                                  <TabsTrigger value="gene_country_sankey" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Gene → Country</TabsTrigger>
+                                  <TabsTrigger value="temporal_scatter" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">Temporal Dist.</TabsTrigger>
+                                  <TabsTrigger value="ssr_gene_genome_dot" className="text-xs px-2 py-1.5 text-foreground/70 data-[state=active]:text-white font-semibold transition-colors">SSR Dot Plot</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="gene_country_sankey">
                                   {isGeneCountrySankeyAvailable && isHssrDataAvailable ? (
@@ -1759,42 +1764,42 @@ function HomePage() {
                             <Alert><Info className="h-4 w-4" /><AlertTitle>No HSSR Data</AlertTitle><AlertDescription>HSSR data is not available for this job.</AlertDescription></Alert>
                           )}
                         </TabsContent>
-                        </TabsContents>
-                      </Tabs>
+                      </TabsContents>
+                    </Tabs>
 
-                      {/* Use Loader for any loading state that's not failed or completed */}
-                      {jobId && jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed' && (
-                        <div className="flex justify-center items-center">
-                          <Loader 
-                            text={jobStatus === 'running' 
-                              ? 'Processing your analysis...' 
-                              : jobStatus === 'queued' 
+                    {/* Use Loader for any loading state that's not failed or completed */}
+                    {jobId && jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed' && (
+                      <div className="flex justify-center items-center">
+                        <Loader
+                          text={jobStatus === 'running'
+                            ? 'Processing your analysis...'
+                            : jobStatus === 'queued'
                               ? 'Job queued, waiting to start...'
                               : 'Initializing analysis...'}
-                          />
-                        </div>
-                      )}
+                        />
+                      </div>
+                    )}
 
-                      {/* Message if no results at all */}
-                      {!isAnyDataLoading && !isAnyResultAvailable && jobStatus === 'completed' && (
-                        <Alert>
-                          <Info className="h-4 w-4" />
-                          <AlertTitle>No Results Generated</AlertTitle>
-                          <AlertDescription>
-                            No data tables or plots were generated for this job, or the result files were empty. Check the job logs or download the full results zip for details.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
+                    {/* Message if no results at all */}
+                    {!isAnyDataLoading && !isAnyResultAvailable && jobStatus === 'completed' && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>No Results Generated</AlertTitle>
+                        <AlertDescription>
+                          No data tables or plots were generated for this job, or the result files were empty. Check the job logs or download the full results zip for details.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
-                )}
-             </CardContent>
-           </Card>
-         </motion.div>
-       )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
-       {/* --- Bottom Navigation Bar --- */}
-        <AnalysisBottomNav onLoadExample={handleLoadExample} onLoadDemo={handleLoadDemoJob} />
+      {/* --- Bottom Navigation Bar --- */}
+      <AnalysisBottomNav onLoadExample={handleLoadExample} onLoadDemo={handleLoadDemoJob} />
     </div>
   );
 }

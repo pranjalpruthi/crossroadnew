@@ -26,7 +26,7 @@ const CITATION = `Pruthi, P., Narayan, J., Agarwal, P., Shukla, N., & Bhatia, A.
 function Breadcrumbs() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const paths = pathname.split('/').filter(Boolean)
-  
+
   return (
     <div className="flex items-center gap-1 text-sm text-gray-500">
       <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-50">
@@ -35,7 +35,7 @@ function Breadcrumbs() {
       {paths.map((path, index) => {
         const href = `/${paths.slice(0, index + 1).join('/')}`
         const isLast = index === paths.length - 1
-        
+
         const displayPath = decodeURIComponent(path);
 
         return (
@@ -47,7 +47,7 @@ function Breadcrumbs() {
                 "capitalize hover:text-gray-900 dark:hover:text-gray-50",
                 { "text-gray-900 dark:text-gray-50 font-medium": isLast }
               )}
-              // activeProps={{ className: "text-gray-900 dark:text-gray-50 font-medium" }} 
+            // activeProps={{ className: "text-gray-900 dark:text-gray-50 font-medium" }} 
             >
               {displayPath}
             </Link>
@@ -96,9 +96,9 @@ function MoreOptionsDropdown() {
           <span>Cite this project</span>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
-          <a 
-            href="https://github.com/BioinformaticsOnLine/croSSRoad" 
-            target="_blank" 
+          <a
+            href="https://github.com/BioinformaticsOnLine/croSSRoad"
+            target="_blank"
             rel="noopener noreferrer"
             className="flex items-center"
           >
@@ -134,24 +134,24 @@ function NavActions({ isHomePage, isScrolled }: { isHomePage?: boolean, isScroll
     <>
       <div className="hidden lg:flex items-center gap-1">
         <AboutDrawer>
-          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full">
             <Info className="h-4 w-4" />
             {!isShrunk && <span className="ml-2">About</span>}
           </Button>
         </AboutDrawer>
         <GuideDrawer>
-          <Button variant="ghost" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+          <Button variant="ghost" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full">
             <BookOpen className="h-4 w-4" />
             {!isShrunk && <span className="ml-2">Guide</span>}
           </Button>
         </GuideDrawer>
         <Link to="/about">
-          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full">
             <FileText className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
             {!isShrunk && <span>Documentation</span>}
           </Button>
         </Link>
-        <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2" onClick={handleCopy}>
+        <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full" onClick={handleCopy}>
           <Copy className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
           {!isShrunk && <span>Cite this project</span>}
         </Button>
@@ -161,7 +161,7 @@ function NavActions({ isHomePage, isScrolled }: { isHomePage?: boolean, isScroll
           rel="noopener noreferrer"
           className="flex items-center"
         >
-          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm p-2">
+          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full">
             <Github className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
             {!isShrunk && <span>GitHub</span>}
             {!isShrunk && <ExternalLink className="ml-auto h-3 w-3" />}
@@ -208,15 +208,15 @@ export default function Navbar() {
   const config = { auth: { enabled: false } };
   const UserProfile = () => <div className="h-8 w-8 rounded-full bg-muted" />;
   const ShinyRotatingBorderButton = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-      <Button variant="outline" className={clsx("!p-1 sm:!p-1.5 !px-2 sm:!px-3", className)}>{children}</Button>
+    <Button variant="outline" className={clsx("!p-1 sm:!p-1.5 !px-2 sm:!px-3", className)}>{children}</Button>
   );
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop
-      setIsScrolled(scrollTop > 10) 
+      setIsScrolled(scrollTop > 10)
     }
 
-    handleScroll() 
+    handleScroll()
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
@@ -226,26 +226,26 @@ export default function Navbar() {
   const headerPadding = isHomePage && !isScrolled ? 'px-3 sm:px-8' : 'px-1 sm:px-4';
   const headerMaxWidth = isHomePage && isScrolled ? 'max-w-3xl' : 'max-w-none';
   const headerRounded = isHomePage ? 'rounded-full' : '';
-  const headerBg = isScrolled 
-      ? "bg-background/60 backdrop-blur-[16px] brightness-[1.1] border border-white/[0.1] dark:border-white/[0.05]"
-      : "bg-background/50 backdrop-blur-[16px]";
+  const headerBg = isScrolled
+    ? "bg-background/60 backdrop-blur-[16px] brightness-[1.1] border border-white/[0.1] dark:border-white/[0.05]"
+    : "bg-background/50 backdrop-blur-[16px]";
   const headerBorder = !isHomePage && isScrolled ? 'border-b border-white/[0.1] dark:border-white/[0.05]' : '';
   const contentHeight = isHomePage && !isScrolled ? 'h-16 sm:h-20' : 'h-12 sm:h-14 lg:h-[55px]';
   const contentPadding = isHomePage && !isScrolled ? 'px-3 sm:px-8' : 'px-1 sm:px-4 md:px-6 lg:px-8';
 
   return (
-    <motion.div 
+    <motion.div
       className={clsx("fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out", navHeight)}
       layout
     >
-      <motion.header 
+      <motion.header
         layout
         className={clsx(
           "w-full h-full relative transition-all duration-300 ease-in-out",
           headerBg,
           headerBorder,
           isHomePage && "overflow-hidden",
-          { 
+          {
             [`${headerMaxWidth} mx-auto ${headerPadding}`]: isHomePage && isScrolled,
             [`w-full ${headerPadding}`]: !isHomePage || !isScrolled,
             [headerRounded]: isHomePage
@@ -253,49 +253,49 @@ export default function Navbar() {
         )}
       >
         {isScrolled && (
-          <motion.div 
+          <motion.div
             layout
             className={clsx(
               "absolute inset-x-0 -bottom-[1px] h-[1px]",
               "bg-gradient-to-r from-transparent via-white/[0.1] dark:via-white/[0.05] to-transparent",
               isHomePage && "rounded-full"
-            )} 
+            )}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
         )}
 
-        <motion.div 
+        <motion.div
           layout
           className={clsx(
             "flex items-center justify-between w-full mx-auto transition-all duration-300 ease-in-out",
             contentHeight,
             contentPadding,
-             { 'max-w-7xl': isHomePage && !isScrolled },
-             { 'max-w-3xl': isHomePage && isScrolled},
-             { [headerRounded]: isHomePage },
-             isHomePage && "overflow-hidden"
+            { 'max-w-7xl': isHomePage && !isScrolled },
+            { 'max-w-3xl': isHomePage && isScrolled },
+            { [headerRounded]: isHomePage },
+            isHomePage && "overflow-hidden"
           )}
         >
-          <motion.div 
+          <motion.div
             layout="position"
             className="flex items-center gap-2 sm:gap-3"
           >
             <Link to="/" aria-label="Go to homepage">
-               <ShinyRotatingBorderButton className={clsx(
+              <ShinyRotatingBorderButton className={clsx(
                 "!p-1 sm:!p-1.5 !px-2 sm:!px-3",
                 isHomePage && !isScrolled ? "!border-0 !bg-transparent" : ""
               )}>
                 <span className="text-sm sm:text-base font-bold tracking-tight">
                   cro<span className="text-primary">SSR</span>oad
-                </span> 
+                </span>
               </ShinyRotatingBorderButton>
             </Link>
             <NavActions isHomePage={isHomePage} isScrolled={isScrolled} />
           </motion.div>
 
-          <motion.div 
+          <motion.div
             layout="position"
             className="flex items-center gap-2 sm:gap-3"
           >
@@ -309,21 +309,21 @@ export default function Navbar() {
                       <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Start Analysis</span>
                     </>}
                     backText="Analyze Now"
-                    className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
-                    frontClassName="bg-primary text-primary-foreground"
-                    backClassName="bg-primary/90"
+                    className={clsx("h-8 gap-1.5 hidden sm:flex px-6 rounded-full", isHomePage && isScrolled && "!w-auto !p-2")}
+                    frontClassName="bg-primary text-primary-foreground rounded-full"
+                    backClassName="bg-primary/90 rounded-full"
                   />
                   <FlipButton
                     from="top"
                     frontText={<BarChart2 className="h-4 w-4" />}
                     backText="Go"
-                    className="h-8 w-8 p-0 sm:hidden"
-                    frontClassName="bg-primary text-primary-foreground"
-                    backClassName="bg-primary/90"
+                    className="h-8 w-8 p-0 sm:hidden rounded-full font-bold"
+                    frontClassName="bg-primary text-primary-foreground rounded-full"
+                    backClassName="bg-primary/90 rounded-full"
                   />
                 </Link>
               )}
-              
+
               {!isDatabasePage && (
                 <Link to="/croSSRoadDB" className="flex-shrink-0">
                   <FlipButton
@@ -333,17 +333,17 @@ export default function Navbar() {
                       <span className={clsx("ml-2", isHomePage && isScrolled && "hidden")}>Database</span>
                     </>}
                     backText="Browse DB"
-                    className={clsx("h-8 gap-1.5 hidden sm:flex px-3", isHomePage && isScrolled && "!w-auto !p-2")}
-                    frontClassName="bg-blue-600 text-white hover:bg-blue-700"
-                    backClassName="bg-blue-700"
+                    className={clsx("h-8 gap-1.5 hidden sm:flex px-6 rounded-full", isHomePage && isScrolled && "!w-auto !p-2")}
+                    frontClassName="bg-blue-600 text-white hover:bg-blue-700 rounded-full"
+                    backClassName="bg-blue-700 rounded-full"
                   />
                   <FlipButton
                     from="top"
                     frontText={<Database className="h-4 w-4" />}
                     backText="DB"
-                    className="h-8 w-8 p-0 sm:hidden"
-                    frontClassName="bg-blue-600 text-white hover:bg-blue-700"
-                    backClassName="bg-blue-700"
+                    className="h-8 w-8 p-0 sm:hidden rounded-full font-bold"
+                    frontClassName="bg-blue-600 text-white hover:bg-blue-700 rounded-full"
+                    backClassName="bg-blue-700 rounded-full"
                   />
                 </Link>
               )}

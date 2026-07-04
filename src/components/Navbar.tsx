@@ -9,6 +9,7 @@ import { FlipButton } from "@/components/animate-ui/buttons/flip"
 import { toast } from "sonner"
 import { AboutDrawer } from "@/components/about-drawer"
 import { GuideDrawer } from "@/components/GuideDrawer"
+import { CROSSROAD_MANUAL_URL } from "@/lib/site-links"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,12 +86,18 @@ function MoreOptionsDropdown() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Resources</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link to="/about">
-          <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <a
+            href={CROSSROAD_MANUAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center"
+          >
             <FileText className="mr-2 h-4 w-4" />
             <span>Documentation</span>
-          </DropdownMenuItem>
-        </Link>
+            <ExternalLink className="ml-auto h-3 w-3" />
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
           <Copy className="mr-2 h-4 w-4" />
           <span>Cite this project</span>
@@ -145,12 +152,13 @@ function NavActions({ isHomePage, isScrolled }: { isHomePage?: boolean, isScroll
             {!isShrunk && <span className="ml-2">Guide</span>}
           </Button>
         </GuideDrawer>
-        <Link to="/about">
-          <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full">
+        <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full" asChild>
+          <a href={CROSSROAD_MANUAL_URL} target="_blank" rel="noopener noreferrer">
             <FileText className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
             {!isShrunk && <span>Documentation</span>}
-          </Button>
-        </Link>
+            {!isShrunk && <ExternalLink className="ml-1 h-3 w-3" />}
+          </a>
+        </Button>
         <Button variant="ghost" size="sm" className="h-8 w-auto hover:bg-background/80 text-sm px-4 rounded-full" onClick={handleCopy}>
           <Copy className={clsx("h-4 w-4", !isShrunk && "mr-2")} />
           {!isShrunk && <span>Cite this project</span>}

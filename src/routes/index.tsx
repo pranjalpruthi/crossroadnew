@@ -1,13 +1,23 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, GitCompare, Database, BarChart3, Microscope, Dna, Github, ExternalLink } from 'lucide-react';
+import { ArrowRight, GitCompare, Database, BarChart3, Microscope, Dna, Github, ExternalLink, ZoomIn, FileText } from 'lucide-react';
 import { FlipButton } from '@/components/animate-ui/buttons/flip';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ApiStatusBadge, DevStatusBadge } from "@/components/ApiStatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { CROSSROAD_MANUAL_URL } from "@/lib/site-links";
 import "@/styles/hero-animation.css";
 
-const CROSSROAD_WORKFLOW_VIEWER_URL =
+const CROSSROAD_WORKFLOW_IMAGE = '/CR1.drawio-optimised.webp';
+const CROSSROAD_WORKFLOW_DRAWIO_URL =
   'https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=CR1.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1vmk2WaiLHUpOm0W2QYL6VJdHvhFMOksA%26export%3Ddownload';
 
 // Define the route for the landing page
@@ -37,6 +47,70 @@ function FeatureCard({
         <CardDescription className="text-base">{description}</CardDescription>
       </CardContent>
     </Card>
+  );
+}
+
+function WorkflowDiagram() {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="rounded-xl border bg-background shadow-sm overflow-hidden"
+      >
+        <div className="flex items-center justify-between gap-3 border-b px-4 py-3 bg-muted/40">
+          <p className="text-sm font-medium text-muted-foreground">Analysis pipeline overview</p>
+          <Button variant="outline" size="sm" asChild>
+            <a
+              href={CROSSROAD_WORKFLOW_DRAWIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open in draw.io
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </Button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsExpanded(true)}
+          className="group relative block w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-label="Expand workflow diagram"
+        >
+          <img
+            src={CROSSROAD_WORKFLOW_IMAGE}
+            alt="croSSRoad analysis workflow diagram"
+            className="w-full h-auto object-contain bg-white dark:bg-neutral-950"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+            <span className="flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+              <ZoomIn className="h-3.5 w-3.5" />
+              Click to expand
+            </span>
+          </div>
+        </button>
+      </motion.div>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-[min(96vw,1400px)] w-full p-2 sm:p-4 gap-0">
+          <DialogTitle className="sr-only">croSSRoad workflow diagram</DialogTitle>
+          <DialogDescription className="sr-only">
+            Expanded view of the croSSRoad analysis pipeline workflow.
+          </DialogDescription>
+          <img
+            src={CROSSROAD_WORKFLOW_IMAGE}
+            alt="croSSRoad analysis workflow diagram"
+            className="w-full h-auto max-h-[85vh] object-contain rounded-md bg-white dark:bg-neutral-950"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -122,6 +196,16 @@ function LandingPage() {
                   backClassName="bg-green-700"
                 />
               </a>
+              <a href={CROSSROAD_MANUAL_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                <FlipButton
+                  from="bottom"
+                  frontText={<span className="flex items-center whitespace-nowrap px-4 py-2"><FileText className="mr-2 h-5 w-5" /> Documentation</span>}
+                  backText={<span className="flex items-center whitespace-nowrap px-4 py-2">Read Manual</span>}
+                  className="w-full sm:w-auto text-lg"
+                  frontClassName="bg-gray-500 hover:bg-gray-600 text-white"
+                  backClassName="bg-gray-700"
+                />
+              </a>
             </motion.div>
           </motion.div>
           
@@ -158,35 +242,7 @@ function LandingPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            className="rounded-xl border bg-background shadow-sm overflow-hidden"
-          >
-            <div className="flex items-center justify-between gap-3 border-b px-4 py-3 bg-muted/40">
-              <p className="text-sm font-medium text-muted-foreground">Analysis pipeline overview</p>
-              <a
-                href={CROSSROAD_WORKFLOW_VIEWER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary hover:underline shrink-0"
-              >
-                Open full screen
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            </div>
-            <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[320px] sm:min-h-[420px]">
-              <iframe
-                src={CROSSROAD_WORKFLOW_VIEWER_URL}
-                title="croSSRoad analysis workflow diagram"
-                className="absolute inset-0 h-full w-full border-0 bg-white dark:bg-neutral-950"
-                loading="lazy"
-                allowFullScreen
-              />
-            </div>
-          </motion.div>
+          <WorkflowDiagram />
         </div>
       </section>
 
@@ -271,7 +327,7 @@ function LandingPage() {
                 croSSRoad makes it easy to analyze SSR patterns across multiple genomes. Run an analysis in the browser or install the CLI for large-scale local workflows.
               </p>
               
-              <div className="pt-2 sm:pt-4">
+              <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row gap-3">
                 <Link to="/analysis" className="w-full sm:w-auto inline-block">
                   <FlipButton
                     from="top"
@@ -282,6 +338,16 @@ function LandingPage() {
                     backClassName="bg-red-500"
                   />
                 </Link>
+                <a href={CROSSROAD_MANUAL_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
+                  <FlipButton
+                    from="top"
+                    frontText={<> Documentation<FileText className="ml-1 h-5 w-4" /></>}
+                    backText="Read Manual"
+                    className="w-full sm:w-auto"
+                    frontClassName="bg-gray-500 hover:bg-gray-600 text-white"
+                    backClassName="bg-gray-700"
+                  />
+                </a>
               </div>
             </motion.div>
 

@@ -115,6 +115,8 @@ import SsrGeneGenomeDotPlot from '@/components/plots/SsrGeneGenomeDotPlot'; // I
 import UpsetPlot from '@/components/plots/UpsetPlot'; // Import the UpSet plot component
 
 import { AnalysisBottomNav } from '@/components/AnalysisBottomNav'; // Import the new component
+import { ApiStatusBadge, DevStatusBadge } from "@/components/ApiStatusBadge";
+
 // --- Constants ---
 /**
  * API_BASE_URL determines the base path for API requests.
@@ -1253,6 +1255,17 @@ function HomePage() {
         </div>
       </motion.div>
 
+      {/* --- System Status --- */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="mb-8 flex flex-wrap gap-2 items-center justify-center md:justify-start"
+      >
+        <ApiStatusBadge />
+        <DevStatusBadge />
+      </motion.div>
+
       {/* --- Form & Guide Section (Two Columns) --- */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -1601,11 +1614,67 @@ function HomePage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* SLURM / HPC Info Box */}
+              {(jobStatus === 'queued' || jobStatus === 'running') && (
+                <Alert className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertTitle className="text-blue-800 dark:text-blue-300 font-bold">HPC Job Submitted</AlertTitle>
+                  <AlertDescription className="text-blue-700/80 dark:text-blue-400/80 text-sm">
+                    Your analysis is processing on our high-performance cluster. Depending on the data size, this can take a few minutes to a few hours.
+                    <div className="mt-2 font-medium bg-blue-100/50 dark:bg-blue-950/40 p-2 rounded border border-blue-200/50 dark:border-blue-800/50 italic">
+                      "You can close this tab and come back later. Just copy your Job ID and use the 'Load Previous Job' section below to see your results."
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Progress Bar and Message */}
               <div>
-                <p className="text-sm text-muted-foreground mb-2">{jobMessage || (jobId ? 'Fetching status...' : 'Waiting for status...')}</p>
-                {(jobStatus === 'running' || jobStatus === 'queued') && jobProgress !== null && (<Progress value={jobProgress * 100} className="w-full h-2" />)}
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground">{jobMessage || (jobId ? 'Fetching status...' : 'Waiting for status...')}</p>
+                  {jobStatus === 'queued' && (
+                    <Badge variant="outline" className="text-[10px] uppercase bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800">Slurm: PENDING</Badge>
+                  )}
+                  {jobStatus === 'running' && (
+                    <Badge variant="outline" className="text-[10px] uppercase bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 animate-pulse">Slurm: RUNNING</Badge>
+                  )}
+                </div>
+                {(jobStatus === 'running' || jobStatus === 'queued') && jobProgress !== null && (<Progress value={jobProgress * 100} className="w-full h-2 shadow-inner" />)}
               </div>
+
+              {/* Status Legend - Only show while job is active */}
+              {(jobStatus === 'queued' || jobStatus === 'running') && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-2">
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase opacity-70">Queued</span>
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">Waiting in queue</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase opacity-70">Running</span>
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">Processing on HPC</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase opacity-70">Completed</span>
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">Results available</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-red-500" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase opacity-70">Failed</span>
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">Process interrupted</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Error Display */}
               {jobStatus === 'failed' && (<Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Job Failed</AlertTitle><AlertDescription>{jobError || 'Unknown error'}</AlertDescription></Alert>)}
               {/* Results Controls */}

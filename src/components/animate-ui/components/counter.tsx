@@ -54,6 +54,8 @@ function Counter({
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
+      // Prevent implicit form submission (Enter in a text input submits the nearest form by default)
+      event.preventDefault();
       handleInputBlur();
     } else if (event.key === 'Escape') {
       setInputValue(String(number));
@@ -89,6 +91,7 @@ function Counter({
     >
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
+          type="button"
           size="icon"
           {...buttonProps}
           onClick={() => setNumber(number - 1)}
@@ -126,6 +129,7 @@ function Counter({
 
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
+          type="button"
           size="icon"
           {...buttonProps}
           onClick={() => setNumber(number + 1)}

@@ -86,6 +86,8 @@ import {
   Settings2, // Added Settings2 icon
   Sparkles, // Added Sparkles icon
   Database, // Added Database icon
+  RotateCcw, // Added for "Reset to Defaults" button
+  ExternalLink,
 } from "lucide-react";
 import { motion } from 'motion/react';
 import { WritingText } from "@/components/animate-ui/text/writing"; // Import WritingText
@@ -145,7 +147,51 @@ const DEMO_FILE_MAPPING: Record<PlotKey, string> = {
 };
 
 // Type for the result of a single query within useQueries
-type PlotQueryResult = UseQueryResult<{ plotKey: PlotKey; data: any[] | null; error?: string }, Error>;
+type PlotDataResult = {
+  plotKey: PlotKey;
+  data: any[] | null;
+  error?: string;
+  // Present when the backend capped a very large result file (see MAX_PREVIEW_FILE_BYTES
+  // on the API) to a row-limited preview instead of loading/serializing it whole.
+  truncated?: boolean;
+  totalRows?: number;
+  previewRows?: number;
+  fileSizeBytes?: number;
+};
+type PlotQueryResult = UseQueryResult<PlotDataResult, Error>;
+
+// Formats a byte count as a human-readable size string (e.g. "7.8 GB").
+function formatBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / Math.pow(1024, exponent);
+  return `${value.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+}
+
+type JobResultFile = {
+  relative_path: string;
+  name: string;
+  label: string;
+  size_bytes: number;
+  download_url: string;
+  is_primary: boolean;
+};
+
+const CLI_GITHUB_URL = 'https://github.com/BioinformaticsOnLine/croSSRoad';
+const CLI_CONDA_URL = 'https://anaconda.org/channels/jitendralab/packages/crossroad/overview';
+const CLI_INSTALL_CMD = 'conda install jitendralab::crossroad';
+
+/** Resolve an API path (/api/job/...) for fetch or window.open in dev vs prod. */
+function resolveApiPath(path: string): string {
+  if (import.meta.env.DEV || import.meta.env.VITE_CROSSROAD_API_URL) {
+    return path;
+  }
+  return `${API_BASE_URL}${path}`;
+}
+
+/** Jobs above this total primary-file size get direct downloads instead of zip. */
+const LARGE_RESULTS_TOTAL_BYTES = 500 * 1024 * 1024;
 
 // TextShine component for loading state
 export function TextShine({ text = "Fetching data..." }: { text?: string }) {
@@ -248,7 +294,7 @@ const perfSchema = z.object({
   minLen: z.number().int().min(0).default(1000),
   maxLen: z.number().int().min(0).default(10000000),
   max_n_bases: z.number().int().min(0).default(0),
-  thread: z.number().int().min(1).default(50),
+  thread: z.number().int().min(1).default(10),
   min_repeat_count: z.number().int().min(1).default(1),
   min_genome_count: z.number().int().min(1).default(2),
 });
@@ -280,10 +326,12 @@ type JobSubmissionSuccess = {
 };
 
 // Explicit type for default values structure
+// File fields keep the full FormValues type (not just `undefined`) so TanStack Form's
+// inferred field paths (used by setFieldValue/form.Field) still include them.
 type FormDefaultValues = {
-  fasta_file: undefined; // FileList defaults are typically undefined
-  categories_file: undefined;
-  gene_bed: undefined;
+  fasta_file: FormValues['fasta_file']; // Defaults to undefined at runtime
+  categories_file: FormValues['categories_file'];
+  gene_bed: FormValues['gene_bed'];
   reference_id?: string;
   flanks: boolean;
   perf_params: PerfParams; // Use the existing PerfParams type
@@ -300,7 +348,7 @@ const perfParamDescriptions: Record<keyof PerfParams, string> = {
   minLen: "Minimum genome length for filtering. Genomes shorter than this value will be excluded from analysis. Default: 1000 bp.",
   maxLen: "Maximum genome length for filtering. Genomes longer than this value will be excluded from analysis. Default: 10,000,000 bp.",
   max_n_bases: "Maximum number of 'N' (unknown) bases allowed per genome. Genomes with more 'N's than this value will be excluded. Default: 0.",
-  thread: "Number of threads for parallel processing. Specifies how many CPU cores can be utilized during the analysis. Default: 50.",
+  thread: "Number of threads for parallel processing. Specifies how many CPU cores can be utilized during the analysis. Default: 10.",
   min_repeat_count: "Minimum repeat count for hotspot filtering. SSRs found in fewer genomes than this threshold will be excluded from hotspot analysis. Default: 1.",
   min_genome_count: "Minimum genome count for hotspot filtering. SSRs must be present in at least this many genomes to be considered for hotspot analysis. Default: 2.",
 };
@@ -656,7 +704,7 @@ function HomePage() {
     minLen: 1000,
     maxLen: 10000000,
     max_n_bases: 0,
-    thread: 50,
+    thread: 10, // Fixed server-side setting; intentionally not exposed/configurable in the UI
     min_repeat_count: 1,
     min_genome_count: 2,
   };
@@ -672,18 +720,7 @@ function HomePage() {
     perf_params: defaultPerfParams,
   };
 
-  const form = useForm<
-    FormValues,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    unknown
-  >({
+  const form = useForm({
     defaultValues: defaultFormVals, // Use the explicitly typed default values
     onSubmit: async ({ value }) => {
       const formData = prepareFormData(value);
@@ -706,6 +743,7 @@ function HomePage() {
   };
 
   // --- TanStack Query: Job Submission Mutation ---
+  // Network upload only starts here (on Submit). File pickers only read files locally for validation.
   const submitMutation = useMutation({
     mutationFn: (formData: FormData): Promise<JobSubmissionSuccess> => {
       return new Promise((resolve, reject) => {
@@ -713,14 +751,15 @@ function HomePage() {
         xhr.open('POST', `${API_BASE_URL}/analyze_ssr/`, true);
 
         xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
+          if (event.lengthComputable && event.total > 0) {
+            // Cap at 99 until the response arrives so the bar doesn't snap back from 100 → null
+            const percentComplete = Math.min(99, Math.round((event.loaded / event.total) * 100));
             setUploadProgress(percentComplete);
           }
         };
 
         xhr.onload = () => {
-          setUploadProgress(null); // Clear progress on completion
+          setUploadProgress(100);
           if (xhr.status >= 200 && xhr.status < 300) {
             if (xhr.status !== 202) {
               reject(new Error(`Expected status 202, got ${xhr.status}`));
@@ -738,7 +777,6 @@ function HomePage() {
         };
 
         xhr.onerror = () => {
-          setUploadProgress(null); // Clear progress on error
           reject(new Error('Network request failed'));
         };
 
@@ -746,13 +784,12 @@ function HomePage() {
       });
     },
     onMutate: () => {
-      toast.loading("Submitting analysis job...", { id: 'job-submission' });
+      toast.loading("Uploading files and submitting job...", { id: 'job-submission' });
       setJobId(null); setJobUrls(null); setJobStatus(null); setJobMessage(null);
-      setJobProgress(null); setJobError(null); setSubmittedReferenceId(null); // Clear submitted ref ID on new submission
+      setJobProgress(null); setJobError(null); setSubmittedReferenceId(null);
       setUploadProgress(0);
     },
-    onSuccess: (data: JobSubmissionSuccess) => { // Remove unused variables parameter
-      // Explicitly use only the 'data' parameter from onSuccess for job details
+    onSuccess: (data: JobSubmissionSuccess) => {
       const newJobId = data.job_id;
       const initialStatus = data.status;
       const initialMessage = `Job submitted, initial status: ${initialStatus}`;
@@ -766,29 +803,28 @@ function HomePage() {
         };
       }
 
-      // Update state based ONLY on the 'data' parameter
       setJobId(newJobId);
       setJobStatus(initialStatus);
       setJobMessage(initialMessage);
       setJobUrls(newUrls);
-      // Store the reference_id from the *submitted* form values
-      // We need to get it from the submitted form data, which isn't directly passed here.
-      // A workaround is to read it from the form state *before* reset, assuming it hasn't changed.
-      // Or better, pass the submitted values to onSuccess if the library supports it.
-      // Let's assume we can access the submitted value via the form instance before reset.
-      const submittedValues = form.state.values; // Get values before reset
-      setSubmittedReferenceId(submittedValues.reference_id || null); // Store submitted ref ID
+      const submittedValues = form.state.values;
+      setSubmittedReferenceId(submittedValues.reference_id || null);
 
-      // Show toast based ONLY on the 'data' parameter
       toast.success(`Job ${newJobId} submitted! Initial Status: ${initialStatus}.`, { id: 'job-submission' });
 
-      // Reset form
-      form.reset();
+      // Intentionally not calling form.reset() here: the submit button is already
+      // disabled while a job is active (see LiquidButton's disabled logic below), so there's
+      // no risk of an accidental resubmission. Keeping the values lets the user see exactly what
+      // was submitted, and lets a "failed" job be retried/tweaked without re-entering everything.
     },
     onError: (error: any) => {
       toast.error(`Submission failed: ${error.message || 'Unknown error'}`, { id: 'job-submission' });
       setJobError(error.message || 'Submission failed');
-      setSubmittedReferenceId(null); // Clear submitted ref ID on error
+      setSubmittedReferenceId(null);
+    },
+    onSettled: () => {
+      // Brief pause at 100% so the bar doesn't vanish mid-animation
+      window.setTimeout(() => setUploadProgress(null), 400);
     },
   });
 
@@ -1029,11 +1065,42 @@ function HomePage() {
       toast.error(`Failed to load example data: ${error.message}`, { id: 'load-example' });
     }
   };
+  // --- List result files first (fast) so we can skip plot fetches for multi-GB jobs ---
+  const { data: jobFilesData, isLoading: isJobFilesLoading } = useQuery({
+    queryKey: ['jobFiles', jobId],
+    queryFn: async (): Promise<{ job_id: string; files: JobResultFile[] }> => {
+      const resp = await fetch(resolveApiPath(`/api/job/${jobId}/files`));
+      if (!resp.ok) throw new Error(`Failed to list result files (${resp.status})`);
+      return resp.json();
+    },
+    enabled: jobStatus === 'completed' && !!jobId && jobId !== DEMO_JOB_ID,
+    staleTime: Infinity,
+  });
+
+  const primaryResultFiles = useMemo(
+    () => jobFilesData?.files.filter((f) => f.is_primary) ?? [],
+    [jobFilesData],
+  );
+
+  const isLargeResultsJob = useMemo(() => {
+    if (jobId === DEMO_JOB_ID) return false;
+    if (!jobFilesData?.files) return false;
+    if (primaryResultFiles.some((f) => f.size_bytes > 100 * 1024 * 1024)) return true;
+    const totalPrimaryBytes = primaryResultFiles.reduce((sum, f) => sum + f.size_bytes, 0);
+    return totalPrimaryBytes > LARGE_RESULTS_TOTAL_BYTES;
+  }, [jobId, jobFilesData, primaryResultFiles]);
+
+  // Wait for file listing before fetching plot data (except demo). Skip entirely for large jobs.
+  const canFetchPlotData =
+    jobStatus === 'completed' &&
+    !!jobUrls?.resultsBase &&
+    (jobId === DEMO_JOB_ID || (jobFilesData !== undefined && !isLargeResultsJob));
+
   // --- Fetch Multiple Table Data via Arrow using useQueries ---
   const plotDataQueries = useQueries({
     queries: PLOT_KEYS_TO_FETCH.map((plotKey) => ({
       queryKey: ['plotData', jobId, plotKey],
-      queryFn: async (): Promise<{ plotKey: PlotKey; data: any[] | null; error?: string }> => {
+      queryFn: async (): Promise<PlotDataResult> => {
         if (!jobStatus || jobStatus !== 'completed' || !jobUrls?.resultsBase) {
           return { plotKey, data: null }; // Return null if prerequisites not met
         }
@@ -1128,6 +1195,13 @@ function HomePage() {
             return { plotKey, data };
           }
 
+          // Backend caps very large result files to a row-limited preview rather than
+          // loading/serializing them whole (see MAX_PREVIEW_FILE_BYTES on the API).
+          const truncated = resp.headers.get('X-Data-Truncated') === 'true';
+          const totalRowsHeader = resp.headers.get('X-Data-Total-Rows');
+          const previewRowsHeader = resp.headers.get('X-Data-Preview-Rows');
+          const fileSizeHeader = resp.headers.get('X-Data-File-Size-Bytes');
+
           // For regular jobs, continue with Arrow format
           const buffer = await resp.arrayBuffer();
           if (buffer.byteLength === 0) {
@@ -1142,13 +1216,20 @@ function HomePage() {
             }
             return newRow;
           });
-          return { plotKey, data };
+          return {
+            plotKey,
+            data,
+            truncated,
+            totalRows: totalRowsHeader ? Number(totalRowsHeader) : undefined,
+            previewRows: previewRowsHeader ? Number(previewRowsHeader) : data.length,
+            fileSizeBytes: fileSizeHeader ? Number(fileSizeHeader) : undefined,
+          };
         } catch (error: any) {
           console.error(`Failed to fetch or parse data for ${plotKey}:`, error);
           return { plotKey, data: null, error: error.message || 'Fetch/Parse Error' };
         }
       },
-      enabled: jobStatus === 'completed' && !!jobUrls?.resultsBase,
+      enabled: canFetchPlotData,
       staleTime: Infinity, // Data for completed jobs doesn't change
       // Add the select function only for the 'plot_source' key
       // select: plotKey === 'plot_source' ? selectRelativeAbundanceData : undefined, // Removed select
@@ -1321,10 +1402,9 @@ function HomePage() {
                     }}
                     accept=".fa,.fasta"
                     required={true}
-                    title="Upload FASTA File"
-                    description="Provide your genomic sequences"
+                    title="Select FASTA File"
+                    description="Provide your genomic sequences (sent only on Submit)"
                     fileTypeHint="fasta"
-                    uploadProgress={uploadProgress}
                   />
                   <FieldInfo field={field} />
                 </div>
@@ -1349,7 +1429,6 @@ function HomePage() {
                       title="Categories File (.tsv)"
                       description="Optional metadata"
                       fileTypeHint="tsv"
-                      uploadProgress={uploadProgress}
                     />
                     <FieldInfo field={field} />
                   </div>
@@ -1372,7 +1451,6 @@ function HomePage() {
                       title="Gene BED File (.bed)"
                       description="Optional annotations"
                       fileTypeHint="bed"
-                      uploadProgress={uploadProgress}
                     />
                     <FieldInfo field={field} />
                   </div>
@@ -1439,11 +1517,24 @@ function HomePage() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pt-4 pb-4 border-t border-gray-200/80 dark:border-gray-800/70 bg-white/50 dark:bg-gray-950/50">
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Set the minimum repeat counts for different SSR motif types (mono-, di-, tri-nucleotides, etc.). These values determine which sequences are identified as SSRs.
-                      </p>
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <p className="text-xs text-muted-foreground">
+                          Set the minimum repeat counts for different SSR motif types (mono-, di-, tri-nucleotides, etc.). These values determine which sequences are identified as SSRs.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 shrink-0 text-xs"
+                          onClick={() => form.setFieldValue('perf_params', defaultPerfParams)}
+                        >
+                          <RotateCcw className="mr-1.5 h-3 w-3" /> Reset to Defaults
+                        </Button>
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
-                        {(Object.keys(defaultPerfParams) as Array<keyof PerfParams>).map((key) => (
+                        {(Object.keys(defaultPerfParams) as Array<keyof PerfParams>)
+                          .filter((key) => key !== 'thread') // Thread count is a fixed server-side setting, not user-configurable
+                          .map((key) => (
                           <form.Field key={key} name={`perf_params.${key}`}>
                             {(field) => (
                               <div className="space-y-2">
@@ -1453,7 +1544,7 @@ function HomePage() {
                                   </Label>
                                   <Popover>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-primary rounded-full">
+                                      <Button type="button" variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-primary rounded-full">
                                         <Info className="h-3 w-3" />
                                       </Button>
                                     </PopoverTrigger>
@@ -1514,7 +1605,9 @@ function HomePage() {
 
           <form.Subscribe selector={(state) => [state.canSubmit, state.isValid, state.isValidating]}>
             {([canSubmit, isValid, isValidating]) => {
+              const isUploading = uploadProgress !== null;
               const buttonText = () => {
+                if (isUploading && uploadProgress < 100) return "Uploading files...";
                 if (submitMutation.isPending || isValidating) return "Submitting...";
                 if (jobStatus === 'completed') return "Job Completed";
                 if (jobStatus === 'running') return "Job Running...";
@@ -1522,7 +1615,7 @@ function HomePage() {
                 return "Submit Job";
               };
 
-              const showLoader = submitMutation.isPending || isValidating || jobStatus === 'running';
+              const showLoader = submitMutation.isPending || isValidating || jobStatus === 'running' || isUploading;
 
               return (
                 <div className="space-y-4">
@@ -1543,6 +1636,16 @@ function HomePage() {
                       </div>
                     )}
                   </LiquidButton>
+
+                  {isUploading && (
+                    <div className="space-y-1.5 rounded-lg border bg-muted/40 px-3 py-2.5">
+                      <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                        <span>Uploading files to server</span>
+                        <span className="tabular-nums">{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress ?? 0} className="h-2" />
+                    </div>
+                  )}
 
                   {jobId && (
                     <div className="text-center bg-muted/50 p-3 rounded-lg">
@@ -1682,15 +1785,121 @@ function HomePage() {
                 <div className="space-y-4 pt-4">
                   <Separator />
                   <p className="font-semibold text-lg">Results</p>
-                  <Button variant="default" size="sm" onClick={() => jobUrls?.downloadAll && window.open(
-                    import.meta.env.DEV ? jobUrls.downloadAll : `${API_BASE_URL}${jobUrls.downloadAll}`,
-                    '_blank'
-                  )} disabled={!jobUrls?.downloadAll}>
-                    <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
-                  </Button>
-                  {/* --- Results Structure with Tabs --- */}
-                  <div className="mt-6 space-y-8"> {/* Increased spacing */}
 
+                  {/* Small jobs: quick zip download. Large jobs: direct per-file downloads + CLI guidance. */}
+                  {!isLargeResultsJob && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => jobUrls?.downloadAll && window.open(
+                        resolveApiPath(jobUrls.downloadAll),
+                        '_blank',
+                      )}
+                      disabled={!jobUrls?.downloadAll}
+                    >
+                      <Download className="mr-2 h-4 w-4" /> Download Full Results (.zip)
+                    </Button>
+                  )}
+
+                  {isLargeResultsJob && (
+                    <Alert className="bg-blue-50/60 dark:bg-blue-900/20 border-blue-300 dark:border-blue-800">
+                      <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <AlertTitle className="text-blue-800 dark:text-blue-300 font-bold">
+                        Large result set — use direct downloads or the CLI
+                      </AlertTitle>
+                      <AlertDescription className="text-blue-700/90 dark:text-blue-400/90 text-sm space-y-2">
+                        <p>
+                          This job produced very large tables (multi-GB). Zipping the entire output folder can take a long time
+                          and may fail in the browser. Download individual files below, or use the{' '}
+                          <span className="font-medium">croSSRoad CLI</span> for full local analysis and plotting.
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                            <a href={CLI_GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="mr-1.5 h-3 w-3" /> GitHub CLI
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                            <a href={CLI_CONDA_URL} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="mr-1.5 h-3 w-3" /> Conda package
+                            </a>
+                          </Button>
+                        </div>
+                        <p className="text-xs font-mono bg-blue-100/50 dark:bg-blue-950/40 px-2 py-1 rounded border border-blue-200/50 dark:border-blue-800/50">
+                          {CLI_INSTALL_CMD}
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Per-file downloads with sizes */}
+                  {jobId !== DEMO_JOB_ID && (
+                    <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                      <p className="text-sm font-medium">Result files</p>
+                      {isJobFilesLoading ? (
+                        <p className="text-xs text-muted-foreground">Loading file list…</p>
+                      ) : primaryResultFiles.length > 0 ? (
+                        <ul className="space-y-2">
+                          {primaryResultFiles.map((file) => (
+                            <li
+                              key={file.relative_path}
+                              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md border bg-background px-3 py-2"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{file.label}</p>
+                                <p className="text-xs text-muted-foreground font-mono truncate">{file.name}</p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Badge variant="secondary" className="font-mono text-xs tabular-nums">
+                                  {formatBytes(file.size_bytes)}
+                                </Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8"
+                                  onClick={() => window.open(resolveApiPath(file.download_url), '_blank')}
+                                >
+                                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                                  Download
+                                </Button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No result files found.</p>
+                      )}
+                      {!isLargeResultsJob && primaryResultFiles.length > 0 && (
+                        <p className="text-xs text-muted-foreground pt-1">
+                          Or use the zip above to download all output files at once.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Truncated-preview warning removed for large jobs — plots/tables are not loaded at all. */}
+
+                  {/* --- Results Structure with Tabs (small jobs only) --- */}
+                  <div className="mt-6 space-y-8">
+                    {isJobFilesLoading && jobId !== DEMO_JOB_ID && (
+                      <div className="flex justify-center py-4">
+                        <TextShine text="Checking result file sizes…" />
+                      </div>
+                    )}
+
+                    {isLargeResultsJob && (
+                      <Alert className="bg-muted/50 border-dashed">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Interactive plots unavailable in browser</AlertTitle>
+                        <AlertDescription className="text-sm">
+                          Result files are too large for in-browser tables and plots. Download the CSV/TSV files above
+                          or use the croSSRoad CLI to explore and visualize the full dataset locally.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!isLargeResultsJob && (
+                      <>
                     {/* Catchy phrase while loading */}
                     {isAnyDataLoading && (
                       <div className="flex justify-center py-8">
@@ -1836,6 +2045,19 @@ function HomePage() {
                       </TabsContents>
                     </Tabs>
 
+                    {/* Message if no results at all (small jobs only) */}
+                    {!isAnyDataLoading && !isAnyResultAvailable && jobStatus === 'completed' && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>No Results Generated</AlertTitle>
+                        <AlertDescription>
+                          No data tables or plots were generated for this job, or the result files were empty. Check the job logs or download the full results zip for details.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                      </>
+                    )}
+
                     {/* Use Loader for any loading state that's not failed or completed */}
                     {jobId && jobStatus && jobStatus !== 'completed' && jobStatus !== 'failed' && (
                       <div className="flex justify-center items-center">
@@ -1849,16 +2071,6 @@ function HomePage() {
                       </div>
                     )}
 
-                    {/* Message if no results at all */}
-                    {!isAnyDataLoading && !isAnyResultAvailable && jobStatus === 'completed' && (
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>No Results Generated</AlertTitle>
-                        <AlertDescription>
-                          No data tables or plots were generated for this job, or the result files were empty. Check the job logs or download the full results zip for details.
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
                 </div>
               )}

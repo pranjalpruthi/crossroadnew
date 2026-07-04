@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Upload, CheckCircle, File as FileIcon, List, AlertTriangle, RefreshCw } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
@@ -29,7 +29,7 @@ const secondaryVariant = {
   },
 };
 
-type UploadStep = "initial" | "uploading" | "validating" | "results";
+type UploadStep = "initial" | "validating" | "results";
 
 export const FileUpload = ({
   onChange,
@@ -38,7 +38,6 @@ export const FileUpload = ({
   title = "Upload file",
   description = "Drag or drop your files here or click to upload",
   fileTypeHint,
-  uploadProgress = null,
 }: {
   onChange?: (files: File[] | null) => void;
   accept?: string;
@@ -46,28 +45,12 @@ export const FileUpload = ({
   title?: string;
   description?: string;
   fileTypeHint?: 'fasta' | 'tsv' | 'bed';
-  uploadProgress?: number | null;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [step, setStep] = useState<UploadStep>("initial");
   const [headers, setHeaders] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (uploadProgress !== null && uploadProgress > 0 && uploadProgress < 100) {
-      setStep("uploading");
-      setUploadComplete(false);
-    } else if (uploadProgress === 100) {
-      setUploadComplete(true);
-      if (step === "uploading") {
-        setTimeout(() => {
-          setStep("results");
-        }, 1000);
-      }
-    }
-  }, [uploadProgress, step]);
 
   const handleFileChange = (newFiles: File[]) => {
     if (newFiles.length === 0) return;
@@ -76,7 +59,6 @@ export const FileUpload = ({
     onChange?.(newFiles);
     setStep("validating");
     setError(null);
-    setUploadComplete(false);
     
     const file = newFiles[0];
     const reader = new FileReader();
@@ -99,7 +81,8 @@ export const FileUpload = ({
         setStep("results");
     };
 
-    reader.readAsText(file);
+    // Only need the first line for header checks — slice keeps large files snappy
+    reader.readAsText(file.slice(0, 64 * 1024));
   };
 
   const handleReset = (e: React.MouseEvent) => {
@@ -107,7 +90,6 @@ export const FileUpload = ({
     setFiles([]);
     setHeaders([]);
     setError(null);
-    setUploadComplete(false);
     setStep("initial");
     onChange?.(null);
     if (fileInputRef.current) {
@@ -201,35 +183,6 @@ export const FileUpload = ({
                 </div>
               </div>
             )}
-            
-            {step === "uploading" && (
-               <div className="w-full text-left" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center gap-2 min-w-0">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <div className="min-w-0">
-                          <h3 className="text-sm font-semibold truncate">{files[0]?.name || 'Uploading...'}</h3>
-                          <p className="text-xs text-muted-foreground">{(files[0]?.size / (1024 * 1024) || 0).toFixed(2)} MB</p>
-                      </div>
-                  </div>
-                  <div className="w-full mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
-                      <motion.div
-                          className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full"
-                          initial={{ width: "0%" }}
-                          animate={{ width: `${uploadProgress}%` }}
-                          transition={{ duration: 0.5 }}
-                      />
-                      </div>
-                      <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-xs text-center mt-1 font-semibold text-gray-600 dark:text-gray-300"
-                      >
-                      {Math.round(uploadProgress ?? 0)}% Uploading...
-                      </motion.p>
-                  </div>
-               </div>
-            )}
 
             {step === "validating" && (
               <div className="flex flex-col items-center justify-center text-center min-h-[116px]">
@@ -240,8 +193,8 @@ export const FileUpload = ({
                 >
                   <FileIcon className="h-full w-full text-primary" />
                 </motion.div>
-                <h3 className="text-sm font-semibold">Validating File...</h3>
-                <p className="text-xs text-muted-foreground">Checking format and headers.</p>
+                <h3 className="text-sm font-semibold">Reading file locally...</h3>
+                <p className="text-xs text-muted-foreground">Checking format. Nothing is sent to the server yet.</p>
               </div>
             )}
 
@@ -257,7 +210,7 @@ export const FileUpload = ({
                   </div>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-shrink-0">
+                      <Button type="button" variant="outline" size="sm" className="flex-shrink-0">
                         <List className="mr-2 h-4 w-4" />
                         Headers
                       </Button>
@@ -280,10 +233,10 @@ export const FileUpload = ({
                   </Popover>
                 </div>
                 
-                {uploadComplete && !error && (
+                {!error && (
                   <div className="w-full mt-2 flex items-center justify-center text-green-500 text-xs">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    <p className="font-semibold">File Ready</p>
+                    <p className="font-semibold">Selected — ready to submit</p>
                   </div>
                 )}
 
@@ -304,7 +257,7 @@ export const FileUpload = ({
                 )}
 
                 <div className="flex justify-end mt-3">
-                  <Button variant="ghost" size="sm" onClick={handleReset}>
+                  <Button type="button" variant="ghost" size="sm" onClick={handleReset}>
                     <RefreshCw className="mr-2 h-3 w-3" /> Change File
                   </Button>
                 </div>

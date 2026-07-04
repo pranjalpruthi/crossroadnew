@@ -63,6 +63,7 @@ function FlipButton({
 
   return (
     <motion.button
+      type="button"
       data-slot="flip-button"
       initial="initial"
       whileHover="hover"

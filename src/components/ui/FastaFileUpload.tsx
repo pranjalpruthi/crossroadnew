@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { useRef, useState,useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Upload, CheckCircle, File as FileIcon, ArrowRight, List, AlertTriangle, RefreshCw } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -21,7 +21,6 @@ export const FastaFileUpload = ({
   title = "Upload file",
   description = "Drag or drop your files here or click to upload",
   fileTypeHint,
-  uploadProgress = null,
 }: {
   onChange?: (files: File[] | null) => void;
   onGenomeCountChange?: (count: number) => void;
@@ -30,37 +29,16 @@ export const FastaFileUpload = ({
   title?: string;
   description?: string;
   fileTypeHint?: 'fasta';
-  uploadProgress?: number | null;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [step, setStep] = useState<UploadStep>("initial");
   const [expectedGenomeCount, setExpectedGenomeCount] = useState<number>(0);
   const [fastaHeaders, setFastaHeaders] = useState<string[]>([]);
-  const [showProgress, setShowProgress] = useState(false);
-  const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (uploadProgress !== null) {
-      setShowProgress(true);
-      if (uploadProgress >= 100) {
-        setTimeout(() => {
-          setShowProgress(false);
-          setUploadComplete(true);
-        }, 1000);
-      } else {
-        setUploadComplete(false);
-      }
-    } else {
-      setShowProgress(false);
-      setUploadComplete(false);
-    }
-  }, [uploadProgress]);
 
   const handleFileChange = (newFiles: File[]) => {
     if (newFiles.length === 0) return;
     setStep("validating");
-    setUploadComplete(false);
     const file = newFiles[0];
     const reader = new FileReader();
 
@@ -176,7 +154,7 @@ export const FastaFileUpload = ({
                 <p className="text-primary font-semibold mt-2">Drop the file here ...</p>
               ) : (
                 <Button type="button" onClick={() => fileInputRef.current?.click()} className="mt-4" variant="outline">
-                  Click to upload
+                  Click to select
                 </Button>
               )}
             </div>
@@ -191,8 +169,8 @@ export const FastaFileUpload = ({
               >
                 <FileIcon className="h-full w-full text-primary" />
               </motion.div>
-              <h3 className="text-lg font-semibold">Validating File...</h3>
-              <p className="text-sm text-muted-foreground">Analyzing FASTA headers.</p>
+              <h3 className="text-lg font-semibold">Reading file locally...</h3>
+              <p className="text-sm text-muted-foreground">Checking FASTA headers. Nothing is sent to the server yet.</p>
             </div>
           )}
 
@@ -249,29 +227,10 @@ export const FastaFileUpload = ({
                 </Popover>
               </div>
 
-              {showProgress && (
-                <div className="w-full mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                    <motion.div
-                      className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full"
-                      initial={{ width: "0%" }}
-                      animate={{ width: `${uploadProgress}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-xs text-center mt-1 font-semibold text-gray-600 dark:text-gray-300"
-                  >
-                    {Math.round(uploadProgress ?? 0)}% Uploading...
-                  </motion.p>
-                </div>
-              )}
-              {uploadComplete && !countMismatch && (
+              {!countMismatch && (
                 <div className="w-full mt-2 flex items-center justify-center text-green-500 text-sm">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  <p className="font-semibold">File Uploaded & Ready</p>
+                  <p className="font-semibold">Selected — ready to submit</p>
                 </div>
               )}
 
@@ -288,12 +247,12 @@ export const FastaFileUpload = ({
                       <p className="text-sm">
                         You expected {expectedGenomeCount} genomes, but we found {fastaHeaders.length}.
                       </p>
-                      <p className="text-sm mt-1">Do you want to proceed with the detected count or re-upload?</p>
+                      <p className="text-sm mt-1">Do you want to proceed with the detected count or re-select?</p>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-3">
                     <Button type="button" variant="ghost" size="sm" onClick={handleReset}>
-                      <RefreshCw className="mr-2 h-4 w-4" /> Re-upload
+                      <RefreshCw className="mr-2 h-4 w-4" /> Re-select
                     </Button>
                     <Button type="button" size="sm" onClick={() => onGenomeCountChange?.(fastaHeaders.length)}>
                       Proceed with {fastaHeaders.length}

@@ -11,7 +11,7 @@ import {
 
 export function ApiStatusBadge() {
   const [status, setStatus] = useState<"operational" | "error" | "loading">("loading") // Default to loading
-  const [apiVersion, setApiVersion] = useState("v0.3.3") // Default version
+  const [apiVersion, setApiVersion] = useState<string | null>(null) // Populated from /openapi.json
   const apiUrl = import.meta.env.VITE_CROSSROAD_API_URL
 
   useEffect(() => {
@@ -37,30 +37,42 @@ export function ApiStatusBadge() {
 
         clearTimeout(timeoutId)
 
-        if (response.ok) {
-          try {
-            const data = await response.json()
-            if (data.version) {
-              setApiVersion(data.version.startsWith('v') ? data.version : `v${data.version}`)
-            }
-          } catch (e) {
-            // If it's not JSON or doesn't have version, just proceed as operational
-          }
-          setStatus("operational")
-        } else {
-          setStatus("error")
-        }
+        setStatus(response.ok ? "operational" : "error")
       } catch (error) {
         console.error("API connection check failed:", error)
         setStatus("error")
       }
     }
 
+    // The FastAPI app version lives in the OpenAPI spec's info.version, not /health
+    const fetchApiVersion = async () => {
+      const apiBaseUrl = import.meta.env.DEV || import.meta.env.VITE_CROSSROAD_API_URL
+        ? "/api"
+        : "https://cr.pranjal.work"
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/openapi.json`)
+        if (response.ok) {
+          const data = await response.json()
+          const version = data?.info?.version
+          if (version) {
+            setApiVersion(version.startsWith('v') ? version : `v${version}`)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch API version:", error)
+      }
+    }
+
     // Initial check
     checkApiStatus()
+    fetchApiVersion()
 
     // Periodically check API status (every 2 minutes)
-    const intervalId = setInterval(checkApiStatus, 120000)
+    const intervalId = setInterval(() => {
+      checkApiStatus()
+      fetchApiVersion()
+    }, 120000)
 
     return () => clearInterval(intervalId)
   }, [apiUrl])
@@ -96,15 +108,15 @@ export function ApiStatusBadge() {
       {status === "operational" ? (
         <>
           <CheckCircle2 className="h-3.5 w-3.5 text-green-500 dark:text-green-400" />
-          <span>API <span className="font-semibold">{apiVersion}</span> operational</span>
+          <span>API {apiVersion && <span className="font-semibold">{apiVersion}</span>} operational</span>
         </>
       ) : status === "error" ? (
         <>
           <XCircle className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
-          <span>API <span className="font-semibold">{apiVersion}</span> unavailable</span>
+          <span>API {apiVersion && <span className="font-semibold">{apiVersion}</span>} unavailable</span>
         </>
       ) : (
-        <span>Checking API <span className="font-semibold">{apiVersion}</span>...</span>
+        <span>Checking API{apiVersion && <> <span className="font-semibold">{apiVersion}</span></>}...</span>
       )}
     </Badge>
   )

@@ -5,3 +5,14 @@ pnpm build
 pm2 reload crossroad-app
 
 git add . && git commit -m "Update application files" && git push origin main   
+
+
+export PATH="$HOME/.local/node-glibc217/bin:$PATH"
+cd /home/pranjal.p/preeti/crossroadnew
+pnpm dev
+
+
+rsync -avz --delete \
+  --exclude node_modules --exclude dist --exclude .env --exclude .env.local \
+  pranjal.p@192.168.25.76:/home/pranjal.p/preeti/crossroadnew/ \
+  /home/igib/crossroad/crossroadnew/

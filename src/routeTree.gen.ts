@@ -8,185 +8,65 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as CroSSRoadDBIndexRouteImport } from './routes/croSSRoadDB/index'
+import { Route as AnalysisIndexRouteImport } from './routes/analysis/index'
+import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
+import { Route as CroSSRoadDBSearchRouteImport } from './routes/croSSRoadDB/search'
+import { Route as CroSSRoadDBProjectProjectIdRouteImport } from './routes/croSSRoadDB/project/$projectId'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as DashboardRouteImport } from './routes/dashboard/route'
-import { Route as IndexImport } from './routes/index'
-import { Route as DashboardIndexImport } from './routes/dashboard/index'
-import { Route as CroSSRoadDBIndexImport } from './routes/croSSRoadDB/index'
-import { Route as AnalysisIndexImport } from './routes/analysis/index'
-import { Route as AboutIndexImport } from './routes/about/index'
-import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
-import { Route as CroSSRoadDBSearchImport } from './routes/croSSRoadDB/search'
-import { Route as CroSSRoadDBProjectProjectIdImport } from './routes/croSSRoadDB/project/$projectId'
-
-// Create/Update Routes
-
-const DashboardRouteRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const DashboardIndexRoute = DashboardIndexImport.update({
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-
-const CroSSRoadDBIndexRoute = CroSSRoadDBIndexImport.update({
+const CroSSRoadDBIndexRoute = CroSSRoadDBIndexRouteImport.update({
   id: '/croSSRoadDB/',
   path: '/croSSRoadDB/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AnalysisIndexRoute = AnalysisIndexImport.update({
+const AnalysisIndexRoute = AnalysisIndexRouteImport.update({
   id: '/analysis/',
   path: '/analysis/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AboutIndexRoute = AboutIndexImport.update({
+const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const DemoTanstackQueryRoute = DemoTanstackQueryImport.update({
+const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   id: '/demo/tanstack-query',
   path: '/demo/tanstack-query',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CroSSRoadDBSearchRoute = CroSSRoadDBSearchImport.update({
+const CroSSRoadDBSearchRoute = CroSSRoadDBSearchRouteImport.update({
   id: '/croSSRoadDB/search',
   path: '/croSSRoadDB/search',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
 const CroSSRoadDBProjectProjectIdRoute =
-  CroSSRoadDBProjectProjectIdImport.update({
+  CroSSRoadDBProjectProjectIdRouteImport.update({
     id: '/croSSRoadDB/project/$projectId',
     path: '/croSSRoadDB/project/$projectId',
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => rootRouteImport,
   } as any)
 
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/croSSRoadDB/search': {
-      id: '/croSSRoadDB/search'
-      path: '/croSSRoadDB/search'
-      fullPath: '/croSSRoadDB/search'
-      preLoaderRoute: typeof CroSSRoadDBSearchImport
-      parentRoute: typeof rootRoute
-    }
-    '/demo/tanstack-query': {
-      id: '/demo/tanstack-query'
-      path: '/demo/tanstack-query'
-      fullPath: '/demo/tanstack-query'
-      preLoaderRoute: typeof DemoTanstackQueryImport
-      parentRoute: typeof rootRoute
-    }
-    '/about/': {
-      id: '/about/'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/analysis/': {
-      id: '/analysis/'
-      path: '/analysis'
-      fullPath: '/analysis'
-      preLoaderRoute: typeof AnalysisIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/croSSRoadDB/': {
-      id: '/croSSRoadDB/'
-      path: '/croSSRoadDB'
-      fullPath: '/croSSRoadDB'
-      preLoaderRoute: typeof CroSSRoadDBIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexImport
-      parentRoute: typeof DashboardRouteImport
-    }
-    '/croSSRoadDB/project/$projectId': {
-      id: '/croSSRoadDB/project/$projectId'
-      path: '/croSSRoadDB/project/$projectId'
-      fullPath: '/croSSRoadDB/project/$projectId'
-      preLoaderRoute: typeof CroSSRoadDBProjectProjectIdImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface DashboardRouteRouteChildren {
-  DashboardIndexRoute: typeof DashboardIndexRoute
-}
-
-const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
-  DashboardIndexRoute: DashboardIndexRoute,
-}
-
-const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
-  DashboardRouteRouteChildren,
-)
-
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
-  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/about': typeof AboutIndexRoute
-  '/analysis': typeof AnalysisIndexRoute
-  '/croSSRoadDB': typeof CroSSRoadDBIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
-  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/about': typeof AboutIndexRoute
-  '/analysis': typeof AnalysisIndexRoute
-  '/croSSRoadDB': typeof CroSSRoadDBIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
-  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
@@ -197,7 +77,28 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
 }
-
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
+  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/about': typeof AboutIndexRoute
+  '/analysis': typeof AnalysisIndexRoute
+  '/croSSRoadDB': typeof CroSSRoadDBIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/croSSRoadDB/search': typeof CroSSRoadDBSearchRoute
+  '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/about/': typeof AboutIndexRoute
+  '/analysis/': typeof AnalysisIndexRoute
+  '/croSSRoadDB/': typeof CroSSRoadDBIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/croSSRoadDB/project/$projectId': typeof CroSSRoadDBProjectProjectIdRoute
+}
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -205,9 +106,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/croSSRoadDB/search'
     | '/demo/tanstack-query'
-    | '/about'
-    | '/analysis'
-    | '/croSSRoadDB'
+    | '/about/'
+    | '/analysis/'
+    | '/croSSRoadDB/'
     | '/dashboard/'
     | '/croSSRoadDB/project/$projectId'
   fileRoutesByTo: FileRoutesByTo
@@ -233,7 +134,6 @@ export interface FileRouteTypes {
     | '/croSSRoadDB/project/$projectId'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
@@ -245,6 +145,86 @@ export interface RootRouteChildren {
   CroSSRoadDBProjectProjectIdRoute: typeof CroSSRoadDBProjectProjectIdRoute
 }
 
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/croSSRoadDB/': {
+      id: '/croSSRoadDB/'
+      path: '/croSSRoadDB'
+      fullPath: '/croSSRoadDB/'
+      preLoaderRoute: typeof CroSSRoadDBIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analysis/': {
+      id: '/analysis/'
+      path: '/analysis'
+      fullPath: '/analysis/'
+      preLoaderRoute: typeof AnalysisIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/tanstack-query': {
+      id: '/demo/tanstack-query'
+      path: '/demo/tanstack-query'
+      fullPath: '/demo/tanstack-query'
+      preLoaderRoute: typeof DemoTanstackQueryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/croSSRoadDB/search': {
+      id: '/croSSRoadDB/search'
+      path: '/croSSRoadDB/search'
+      fullPath: '/croSSRoadDB/search'
+      preLoaderRoute: typeof CroSSRoadDBSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/croSSRoadDB/project/$projectId': {
+      id: '/croSSRoadDB/project/$projectId'
+      path: '/croSSRoadDB/project/$projectId'
+      fullPath: '/croSSRoadDB/project/$projectId'
+      preLoaderRoute: typeof CroSSRoadDBProjectProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
+}
+
+interface DashboardRouteRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
@@ -255,58 +235,6 @@ const rootRouteChildren: RootRouteChildren = {
   CroSSRoadDBIndexRoute: CroSSRoadDBIndexRoute,
   CroSSRoadDBProjectProjectIdRoute: CroSSRoadDBProjectProjectIdRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/dashboard",
-        "/croSSRoadDB/search",
-        "/demo/tanstack-query",
-        "/about/",
-        "/analysis/",
-        "/croSSRoadDB/",
-        "/croSSRoadDB/project/$projectId"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/dashboard": {
-      "filePath": "dashboard/route.tsx",
-      "children": [
-        "/dashboard/"
-      ]
-    },
-    "/croSSRoadDB/search": {
-      "filePath": "croSSRoadDB/search.tsx"
-    },
-    "/demo/tanstack-query": {
-      "filePath": "demo.tanstack-query.tsx"
-    },
-    "/about/": {
-      "filePath": "about/index.tsx"
-    },
-    "/analysis/": {
-      "filePath": "analysis/index.tsx"
-    },
-    "/croSSRoadDB/": {
-      "filePath": "croSSRoadDB/index.tsx"
-    },
-    "/dashboard/": {
-      "filePath": "dashboard/index.tsx",
-      "parent": "/dashboard"
-    },
-    "/croSSRoadDB/project/$projectId": {
-      "filePath": "croSSRoadDB/project/$projectId.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

@@ -7,8 +7,7 @@ interface InstallationCommandsProps {
 
 export function InstallationCommands({ className }: InstallationCommandsProps) {
   const commandMap = {
-    anaconda: "mamba install -c jitendralab -c bioconda -c conda-forge crossroad -y",
-    pypi: "pip install crossroad-cli"
+    mamba: "mamba install -c jitendralab -c bioconda -c conda-forge crossroad -y",
   };
 
   return (
@@ -20,27 +19,24 @@ export function InstallationCommands({ className }: InstallationCommandsProps) {
         </p>
       </div>
       <ScriptCopyBtn
-        showMultiplePackageOptions={true}
+        showMultiplePackageOptions={false}
         codeLanguage="bash"
         lightTheme="github-light"
         darkTheme="github-dark"
         commandMap={commandMap}
         className="w-full"
       />
-      <div className="flex flex-col space-y-1 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">Anaconda:</span>
-          <a href="https://anaconda.org/jitendralab/crossroad" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-            https://anaconda.org/jitendralab/crossroad
-          </a>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">PyPI:</span>
-          <a href="https://pypi.org/project/crossroad-cli/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-            https://pypi.org/project/crossroad-cli/
-          </a>
-        </div>
+      <div className="text-xs text-muted-foreground">
+        <span className="font-semibold">Conda package: </span>
+        <a
+          href="https://anaconda.org/channels/jitendralab/packages/crossroad/overview"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          anaconda.org/jitendralab/crossroad
+        </a>
       </div>
     </div>
   );
-} 
+}

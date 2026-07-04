@@ -180,7 +180,7 @@ type JobResultFile = {
 
 const CLI_GITHUB_URL = 'https://github.com/BioinformaticsOnLine/croSSRoad';
 const CLI_CONDA_URL = 'https://anaconda.org/channels/jitendralab/packages/crossroad/overview';
-const CLI_INSTALL_CMD = 'conda install jitendralab::crossroad';
+const CLI_INSTALL_CMD = 'mamba install -c jitendralab -c bioconda -c conda-forge crossroad -y';
 
 /** Resolve an API path (/api/job/...) for fetch or window.open in dev vs prod. */
 function resolveApiPath(path: string): string {

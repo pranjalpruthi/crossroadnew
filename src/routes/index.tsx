@@ -1,21 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'motion/react';
-import { ArrowRight, GitCompare, Database, BarChart3, Microscope, Dna, Github, Terminal } from 'lucide-react';
+import { ArrowRight, GitCompare, Database, BarChart3, Microscope, Dna, Github, ExternalLink } from 'lucide-react';
 import { FlipButton } from '@/components/animate-ui/buttons/flip';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import BioinformaticsPipeline from '@/components/BioinformaticsPipeline';
-import { InstallationCommands } from '@/components/InstallationCommands';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { ApiStatusBadge, DevStatusBadge } from "@/components/ApiStatusBadge";
-import {
-  AnimatedSpan,
-  TypingAnimation,
-} from "@/components/magicui/terminal";
-import { Terminal as TerminalWindow } from "@/components/magicui/terminal";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import "@/styles/hero-animation.css";
+
+const CROSSROAD_WORKFLOW_VIEWER_URL =
+  'https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=CR1.drawio&dark=auto#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1vmk2WaiLHUpOm0W2QYL6VJdHvhFMOksA%26export%3Ddownload';
 
 // Define the route for the landing page
 export const Route = createFileRoute('/')({
@@ -44,130 +37,6 @@ function FeatureCard({
         <CardDescription className="text-base">{description}</CardDescription>
       </CardContent>
     </Card>
-  );
-}
-
-// Terminal Demo Component for Drawer
-function DrawerTerminalDemo() {
-  return (
-    <TerminalWindow className="w-full h-[500px] overflow-hidden">
-      <TypingAnimation>~/Documents/GitHub/crossroad main*</TypingAnimation>
-      <TypingAnimation delay={800}>crossroad_dev ❯ crossroad</TypingAnimation>
-
-      <AnimatedSpan delay={1500} className="text-green-500">
-        <span>✔ Preflight checks.</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={2000} className="text-green-500">
-        <span>✔ Verifying dependencies.</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={2500} className="text-green-500">
-        <span>✔ Loading genome analysis toolkit.</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={3000} className="text-blue-500">
-        <span>ℹ Available installation methods:</span>
-        <span className="pl-2">- conda/mamba</span>
-        <span className="pl-2">- pip/PyPI</span>
-      </AnimatedSpan>
-
-      <TypingAnimation delay={3500}>mamba install -c jitendralab -c bioconda -c conda-forge crossroad -y</TypingAnimation>
-
-      <AnimatedSpan delay={4500} className="text-green-500">
-        <span>✔ Downloading packages...</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={5000} className="text-green-500">
-        <span>✔ Resolving dependencies...</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={5500} className="text-green-500">
-        <span>✔ Installing croSSRoad CLI...</span>
-      </AnimatedSpan>
-
-      <AnimatedSpan delay={6000} className="text-blue-500">
-        <span>ℹ Installation complete!</span>
-      </AnimatedSpan>
-
-      <TypingAnimation delay={6500} className="text-muted-foreground">
-        Run 'crossroad --help' to see available commands.
-      </TypingAnimation>
-    </TerminalWindow>
-  );
-}
-
-// Installation Instructions Component
-function InstallationInstructionsDrawer() {
-  return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <FlipButton
-          from="bottom"
-          frontText={<><Terminal className="h-5 w-5" /> <span className="ml-2">View Installation Guide</span></>}
-          backText="Show Details"
-          className="w-full sm:w-auto"
-          frontClassName="bg-gray-500 hover:bg-gray-600 text-white"
-          backClassName="bg-gray-700"
-        />
-      </DrawerTrigger>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-6xl">
-          <DrawerHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <DrawerTitle>Install croSSRoad CLI</DrawerTitle>
-          </DrawerHeader>
-          
-          <ScrollArea className="h-[calc(100vh-15vh-8rem)] px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-16">
-              {/* Left side: Installation Commands */}
-              <div className="space-y-4">
-                <div className="rounded-lg border bg-card p-6">
-                  <h3 className="text-lg font-medium mb-4">For large-scale genomic analyses, use our command-line toolkit:</h3>
-                  <InstallationCommands />
-                  
-                  <div className="mt-6 space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-1">Anaconda:</h4>
-                      <a 
-                        href="https://anaconda.org/jitendralab/crossroad" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        anaconda.org/jitendralab/crossroad
-                      </a>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-1">PyPI:</h4>
-                      <a 
-                        href="https://pypi.org/project/crossroad-cli/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        pypi.org/project/crossroad-cli
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right side: Terminal Demo */}
-              <div className="h-[500px] rounded-lg border bg-card">
-                <DrawerTerminalDemo />
-              </div>
-            </div>
-          </ScrollArea>
-
-          {/* Footer with close button - Fixed at bottom */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/80 backdrop-blur-xl">
-            <div className="flex justify-end max-w-6xl mx-auto w-full">
-              <Button variant="outline" className="w-24">Close</Button>
-            </div>
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
   );
 }
 
@@ -233,7 +102,7 @@ function LandingPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-<Link to="/analysis" className="w-full sm:w-auto">
+              <Link to="/analysis" className="w-full sm:w-auto">
                 <FlipButton
                   from="left"
                   frontText={<span className="flex items-center whitespace-nowrap px-4 py-2">Run Analysis Now <ArrowRight className="ml-2 h-5 w-5" /></span>}
@@ -266,6 +135,56 @@ function LandingPage() {
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <img src="/logo512.png" alt="croSSRoad Logo" className="h-72 w-72 object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.2)]" />
               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* croSSRoad Workflow Section */}
+      <section className="border-t bg-muted/20 py-12 sm:py-16 md:py-20">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 sm:mb-8 text-center space-y-2"
+          >
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+              croSSRoad Workflow
+            </h2>
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground">
+              End-to-end pipeline from genome input through SSR detection, gene intersection, hotspot analysis, and visualization.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="rounded-xl border bg-background shadow-sm overflow-hidden"
+          >
+            <div className="flex items-center justify-between gap-3 border-b px-4 py-3 bg-muted/40">
+              <p className="text-sm font-medium text-muted-foreground">Analysis pipeline overview</p>
+              <a
+                href={CROSSROAD_WORKFLOW_VIEWER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary hover:underline shrink-0"
+              >
+                Open full screen
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+            <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[320px] sm:min-h-[420px]">
+              <iframe
+                src={CROSSROAD_WORKFLOW_VIEWER_URL}
+                title="croSSRoad analysis workflow diagram"
+                className="absolute inset-0 h-full w-full border-0 bg-white dark:bg-neutral-950"
+                loading="lazy"
+                allowFullScreen
+              />
             </div>
           </motion.div>
         </div>
@@ -349,23 +268,20 @@ function LandingPage() {
             >
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Ready to get started?</h2>
               <p className="text-base sm:text-lg text-muted-foreground">
-                croSSRoad makes it easy to analyze SSR patterns across multiple genomes. Choose the option that works best for you:
+                croSSRoad makes it easy to analyze SSR patterns across multiple genomes. Run an analysis in the browser or install the CLI for large-scale local workflows.
               </p>
               
-              <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row gap-3">
-<Link to="/analysis" className="w-full sm:w-auto">
-                <FlipButton
-                  from="top"
-                  frontText={<> Run Analysis<ArrowRight className="ml-1 h-5 w-4" /></>}
-                  backText="Let's Go!"
-                  className="w-full sm:w-auto"
-                  frontClassName="bg-blue-500 hover:bg-blue-600 text-white"
-                  backClassName="bg-red-500"
-                />
-              </Link>
-              <div className="w-full sm:w-auto">
-                <InstallationInstructionsDrawer />
-              </div>
+              <div className="pt-2 sm:pt-4">
+                <Link to="/analysis" className="w-full sm:w-auto inline-block">
+                  <FlipButton
+                    from="top"
+                    frontText={<> Run Analysis<ArrowRight className="ml-1 h-5 w-4" /></>}
+                    backText="Let's Go!"
+                    className="w-full sm:w-auto"
+                    frontClassName="bg-blue-500 hover:bg-blue-600 text-white"
+                    backClassName="bg-red-500"
+                  />
+                </Link>
               </div>
             </motion.div>
 
@@ -404,13 +320,6 @@ function LandingPage() {
               </div>
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* Development Timeline Section - MOVED here from above Features */}
-      <section className="border-t py-12 sm:py-20 md:py-24 bg-gradient-to-b from-white/50 to-blue-50/50 dark:from-gray-950/50 dark:to-blue-950/20">
-        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
-          <BioinformaticsPipeline />
         </div>
       </section>
 

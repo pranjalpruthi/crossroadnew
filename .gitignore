@@ -6,3 +6,7 @@ dist-ssr
 .cursorrules
 .env
 .env.local.env
+.kilo/
+.tanstack/
+.vscode/
+.cursorrules
